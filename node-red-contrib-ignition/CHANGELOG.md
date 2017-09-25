@@ -1,6 +1,6 @@
 # Node-RED for Ignition
 
-### 1.5.2
+### 1.5.3
 
 September 25, 2017
 
