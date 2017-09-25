@@ -1,0 +1,240 @@
+<script type="text/javascript">
+    RED.nodes.registerType("ignition-tag-read",{
+        category: "Ignition",
+        color: "#f7901e",
+        defaults: {
+            server: { value: "", type: "ignition-server", required: true },
+			value: { value: "" },
+			valueType: { value: "msg.payload" },
+			tagPath: { value: "" },
+			name: { value: "" }
+        },
+        inputs:1,
+        outputs:1,
+        icon: "ignition.png",
+        palletteLabel: "ignition tag read",
+        label: function() {
+            return this.name||"ignition-tag-read";
+        },
+        oneditprepare: function() {
+            $("#node-input-valueType").val(this.valueType);
+
+            $("#node-input-value").typedInput({
+                default: 'msg.payload',
+                typeField: $("#node-input-valueType"),
+                types:[
+                    'msg',
+                    {value:"msg.payload", label:"msg.payload", hasValue: false}
+                ]
+            });
+        }
+    });
+
+    RED.nodes.registerType("ignition-tag-write",{
+        category: "Ignition",
+        color: "#f7901e",
+        defaults: {
+            server: { value: "", type: "ignition-server", required: true },
+			value: { value: "" },
+			valueType: { value: "msg.payload" },
+			tagPath: { value: "" },
+			tagValue: { value: "" },
+			name: { value: "" }
+        },
+        inputs:1,
+        outputs:1,
+        align: "right",
+        icon: "ignition.png",
+        palletteLabel: "ignition tag write",
+        label: function() {
+            return this.name||"ignition-tag-write";
+        },
+        oneditprepare: function() {
+            $("#node-input-valueType").val(this.valueType);
+
+            $("#node-input-value").typedInput({
+                default: 'msg.payload',
+                typeField: $("#node-input-valueType"),
+                types:[
+                    'msg',
+                    {value:"msg.payload", label:"msg.payload", hasValue: false}
+                ]
+            });
+        }
+    });
+
+    RED.nodes.registerType("ignition-server",{
+        category: "config",
+        defaults: {
+            hostname: { value:"localhost", required:true },
+            port: { value:"8088", validate:RED.validators.number(), required:true },
+            ssl: { value:false },
+            defaultTagProvider: { value:"edge" },
+			name: { value: "" }
+        },
+        credentials: {
+            apiToken: { type:"text", required:true },
+            secret: { type:"password", required:true }
+        },
+        label: function() {
+            return this.name||((this.ssl ? "https" : "http") + "://" + this.hostname + ":" + this.port);
+        }
+    });
+</script>
+<script type="text/x-red" data-template-name="ignition-tag-read">
+    <div class="form-row">
+        <label for="node-input-server"><i class="fa fa-globe"></i> Ignition Server</label>
+        <input type="text" id="node-input-server">
+    </div>
+     <div class="form-row">
+        <label for="node-input-value"><i class="fa fa-pencil"></i> Value</label>
+        <input type="text" id="node-input-value" style="width:300px">
+        <input type="hidden" id="node-input-valueType">
+    </div>
+    <div class="form-row">
+        <label for="node-input-tagPath"><i class="icon-tag"></i> Tag Path</label>
+        <input type="text" id="node-input-tagPath" placeholder="Tag Path">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+<script type="text/x-red" data-template-name="ignition-tag-write">
+    <div class="form-row">
+        <label for="node-input-server"><i class="fa fa-globe"></i> Ignition Server</label>
+        <input type="text" id="node-input-server">
+    </div>
+     <div class="form-row">
+        <label for="node-input-value"><i class="fa fa-pencil"></i> Value</label>
+        <input type="text" id="node-input-value" style="width:300px">
+        <input type="hidden" id="node-input-valueType">
+    </div>
+    <div class="form-row">
+        <label for="node-input-tagPath"><i class="icon-tag"></i> Tag Path</label>
+        <input type="text" id="node-input-tagPath" placeholder="Tag Path">
+    </div>
+    <div class="form-row">
+        <label for="node-input-tagValue"><i class="icon-tag"></i> Tag Value</label>
+        <input type="text" id="node-input-tagValue" placeholder="Tag Value">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+<script type="text/x-red" data-template-name="ignition-server">
+    <div class="form-row">
+        <label for="node-config-input-hostname"><i class="fa fa-globe"></i> Hostname</label>
+        <input type="text" id="node-config-input-hostname" placeholder="Hostname">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-port">Port</label>
+        <input type="text" id="node-config-input-port" placeholder="Port" style="width: 65px;">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-config-input-ssl" placeholder="SSL" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-config-input-ssl" style="width: 70%;">Use SSL?</label>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-apiToken" style="width: 110px"><i class="fa fa-user"></i> API Token</label>
+        <input type="text" autocomplete="off" id="node-config-input-apiToken" style="width: 8em" placeholder="Token">
+        <i class="fa fa-lock" style="margin-left: 15px;"></i><span> Secret &nbsp;</span>
+        <input type="password" autocomplete="off" id="node-config-input-secret" style="width: 8em" placeholder="Secret">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-defaultTagProvider"><i class="icon-tag"></i> Default Tag Provider</label>
+        <input type="text" id="node-config-input-defaultTagProvider" placeholder="default">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">
+    </div>
+</script>
+<script type="text/x-red" data-help-name="ignition-server">
+    <p>Communication settings for an Ignition server.</p>
+    <h2>Basic Configuration</h2>
+    <p><b>Hostname</b> - The hostname or IP address of the Ignition server.</p>
+    <p><b>Port</b> - The HTTP or HTTPS port of the Ignition server. Use the HTTP port if not using SSL and the HTTPS port if using SSL.</p>
+    <p><b>Use SSL?</b> - Whether or not to use SSL. The node will use HTTPS if true and HTTP if false.</p>
+    <p><b>API Token</b> and <b>Secret</b> - must match one of the entries in Ignition's Node-RED API token configuration.</p>
+    <p><b>Use SSL?</b> - Whether or not to use SSL. The node will use HTTPS if true and HTTP if false.</p>
+    <p><b>Default Tag Provider</b> - The realtime tag provider to use if not specified in the tag path. See <a href="https://docs.inductiveautomation.com:8443/display/DOC79/Understanding+Tags">documentation</a> for more information on realtime tag providers.</p>
+</script>
+<script type="text/x-red" data-help-name="ignition-tag-read">
+    <p>A node for reading tag values from Ignition.</p>
+    <h2>Basic Usage</h2>
+    <p>The <b>tag path</b> must be a valid Ignition tag path. A tag path looks like this:</p>
+    <p><b>[Tag Provider]folder/path/tagname</b></p>
+    <p>If the tag provider, <b>[Tag Provider]</b>, is left out of the tag path, the default tag provider will be used from the server configuration.</p>
+    <h2>Returned Values</h2>
+    <p>The result is a qualified value object that includes the value, quality, and timestamp of the tag:</p>
+    <pre>
+    "ignitionResult":
+    {
+      "defaultTagProvider": "edge",
+      "inTagPath": "folder/path/tagname",
+      "tagPath": "[edge]folder/path/tagname",
+      "value": "value",
+      "quality":
+      {
+        "isGood": true,
+        "intValue": 192,
+        "name": "GOOD_DATA"
+      },
+      "timestamp": "2017-01-01 08:00:00"
+    }
+    </pre>
+    <h2>Dynamic Settings</h2>
+        <p>If the incoming message's payload is an object with the following properties, then they will be used over any settings in the node itself.</code>
+        <p><code>msg.payload.defaultTagProvider</code> - the realtime tag provider name to use if not specified in the tag path.</p>
+        <p><code>msg.payload.tagPath</code> - a valid Ignition tag path.</p>
+    <h2>Error Handling</h2>
+    <p>If an error occurs, an error will be thrown that can be caught with a Catch node. No output message will be sent, so the flow will not continue.</p>
+    <p>In that case, the Catch node's <code>msg</code> will have <u>one</u> of the following properties:
+    </p>
+    <ul>
+      <li><code>msg.ignitionResult.statusCode</code> - the status of the request (1=success, 2=Node-RED failure, 3=request failure, 4=Ignition failure).</li>
+      <li><code>msg.ignitionResult.errorMessage</code> - the error message of the failed request.</li>
+    </ul>
+</script>
+<script type="text/x-red" data-help-name="ignition-tag-write">
+    <p>A node for writing to tags in Ignition.</p>
+    <h2>Basic Usage</h2>
+    <p>The <b>tag path</b> must be a valid Ignition tag path. A tag path looks like this:</p>
+    <p><b>[Tag Provider]folder/path/tagname</b></p>
+    <p>If the tag provider, <b>[Tag Provider]</b>, is left out of the tag path, the default tag provider will be used from the server configuration.</p>
+    <p>The <b>tag value</b> is the value you would like to write.</p>
+    <h2>Returned Values</h2>
+    <p>The result is a qualified value object that includes the value, quality, and timestamp of the tag:</p>
+    <pre>
+    "ignitionResult":
+    {
+      "defaultTagProvider": "edge",
+      "inTagPath": "folder/path/tagname",
+      "inTagValue": "value",
+      "tagPath": "[edge]folder/path/tagname",
+      "value": "value",
+      "quality":
+      {
+        "isGood": true,
+        "intValue": 192,
+        "name": "GOOD_DATA"
+      }
+    }
+    </pre>
+    <h2>Dynamic Settings</h2>
+        <p>If the incoming message's payload is an object with the following properties, then they will be used over any settings in the node itself.</code>
+        <p><code>msg.payload.defaultTagProvider</code> - the realtime tag provider name to use if not specified in the tag path.</p>
+        <p><code>msg.payload.tagPath</code> - a valid Ignition tag path.</p>
+        <p><code>msg.payload.tagValue</code> - the value to write.</p>
+    <h2>Error Handling</h2>
+    <p>If an error occurs, an error will be thrown that can be caught with a Catch node. No output message will be sent, so the flow will not continue.</p>
+    <p>In that case, the Catch node's <code>msg</code> will have <u>one</u> of the following properties:
+    </p>
+    <ul>
+      <li><code>msg.ignitionResult.statusCode</code> - the status of the request (1=success, 2=Node-RED failure, 3=request failure, 4=Ignition failure).</li>
+      <li><code>msg.ignitionResult.errorMessage</code> - the error message of the failed request.</li>
+    </ul>
+</script>

@@ -1,0 +1,40 @@
+{
+  "name": "node-red-contrib-ignition-nodes",
+  "version": "1.5.2",
+  "description": "Adds support for reading and writing to tags in Ignition",
+  "dependencies": {},
+  "keywords": [
+    "node-red",
+    "tag",
+    "tag read",
+    "tag write",
+    "hmi",
+    "scada",
+    "Ignition",
+    "Inductive Automation"
+  ],
+  "author": {
+    "name": "Inductive Automation",
+    "email": "info@inductiveautomation.com",
+    "url": "http://inductiveautomation.com"
+  },
+  "license": "Apache-2.0",
+  "maintainers": [
+    {
+      "name": "Travis Cox",
+      "email": "travis@inductiveautomation.com"
+    }
+  ],
+  "node-red": {
+    "nodes": {
+      "ignition-nodes": "ignition-nodes.js"
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/IgnitionModuleDevelopmentCommunity/IgnitionNode-RED/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IgnitionModuleDevelopmentCommunity/IgnitionNode-RED/node-red-contrib-ignition.git"
+  }
+}
