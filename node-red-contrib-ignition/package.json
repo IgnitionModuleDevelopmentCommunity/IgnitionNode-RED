@@ -35,6 +35,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IgnitionModuleDevelopmentCommunity/IgnitionNode-RED/node-red-contrib-ignition.git"
+    "url": "git+https://github.com/IgnitionModuleDevelopmentCommunity/IgnitionNode-RED.git"
   }
 }

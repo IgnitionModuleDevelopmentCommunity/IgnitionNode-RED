@@ -10,7 +10,7 @@ Requires [Node-RED Ignition Module](https://github.com/IgnitionModuleDevelopment
 
 Run the following command in your Node-RED user directory:
  
-    npm install node-red-contrib-ignition
+    npm install node-red-contrib-ignition-nodes
 
 ## Usage
 
