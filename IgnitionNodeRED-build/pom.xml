@@ -47,7 +47,7 @@
                     <moduleId>org.imdc.nodered.IgnitionNodeRED</moduleId>
                     <moduleName>${project.parent.name}</moduleName>
                     <moduleDescription>${project.description}</moduleDescription>
-                    <moduleVersion>1.0.0</moduleVersion>
+                    <moduleVersion>1.0.1.1000</moduleVersion>
                     <requiredIgnitionVersion>7.9.0</requiredIgnitionVersion>
                     <requiredFrameworkVersion>6</requiredFrameworkVersion>
 

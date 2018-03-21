@@ -53,8 +53,8 @@ public class GatewayHook extends AbstractGatewayModuleHook {
         return Lists.newArrayList(NodeREDAPITokenManagerPage.CONFIG_CATEGORY);
     }
 
-    @Override
-    public boolean isFreeModule() {
-        return true;
-    }
+//    @Override
+//    public boolean isFreeModule() {
+//        return true;
+//    }
 }
