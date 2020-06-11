@@ -1,2 +1,4 @@
 *.tgz
 *.idea
+IgnitionNodeRED-build/target/*
+IgnitionNodeRED-gateway/target/*

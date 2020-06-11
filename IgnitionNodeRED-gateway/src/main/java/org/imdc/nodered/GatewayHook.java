@@ -34,12 +34,12 @@ public class GatewayHook extends AbstractGatewayModuleHook {
 
     @Override
     public void startup(LicenseState licenseState) {
-        gatewayContext.addServlet(NodeREDServlet.PATH, NodeREDServlet.class);
+        gatewayContext.getWebResourceManager().addServlet(NodeREDServlet.PATH, NodeREDServlet.class);
     }
 
     @Override
     public void shutdown() {
-        gatewayContext.removeServlet(NodeREDServlet.PATH);
+        gatewayContext.getWebResourceManager().removeServlet(NodeREDServlet.PATH);
         BundleUtil.get().removeBundle("NodeRED");
     }
 

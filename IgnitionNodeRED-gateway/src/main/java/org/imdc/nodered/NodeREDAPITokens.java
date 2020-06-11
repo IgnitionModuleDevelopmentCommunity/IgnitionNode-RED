@@ -2,7 +2,7 @@ package org.imdc.nodered;
 
 import com.inductiveautomation.ignition.gateway.localdb.persistence.*;
 import com.inductiveautomation.ignition.gateway.web.components.editors.PasswordEditorSource;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import simpleorm.dataset.SFieldFlags;
 import simpleorm.dataset.SFieldMeta;
 import simpleorm.dataset.SRecordInstance;

@@ -1,12 +1,10 @@
 package org.imdc.nodered.servlet;
 
 import com.inductiveautomation.ignition.common.model.values.QualifiedValue;
-import com.inductiveautomation.ignition.common.model.values.Quality;
-import com.inductiveautomation.ignition.common.sqltags.model.TagPath;
-import com.inductiveautomation.ignition.common.sqltags.model.types.DataQuality;
-import com.inductiveautomation.ignition.common.sqltags.parser.TagPathParser;
+import com.inductiveautomation.ignition.common.model.values.QualityCode;
+import com.inductiveautomation.ignition.common.tags.model.TagPath;
+import com.inductiveautomation.ignition.common.tags.paths.parser.TagPathParser;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
-import com.inductiveautomation.ignition.gateway.sqltags.model.WriteRequest;
 import org.imdc.nodered.NodeREDAPITokens;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,6 +21,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by travis.cox on 8/31/2017.
@@ -132,6 +131,9 @@ public class NodeREDServlet extends HttpServlet {
             } catch (JSONException ex) {
                 logger.warn("Incorrect format for JSON POST data: " + input.toString(), ex);
                 errorMessage = "Incorrect format for JSON POST data: " + input.toString();
+            } catch (ExecutionException | InterruptedException ex){
+                logger.warn("Error executing command: " + input.toString(), ex);
+                errorMessage = "Error executing command: " + input.toString();
             }
 
             try {
@@ -180,8 +182,8 @@ public class NodeREDServlet extends HttpServlet {
         return new APITokenValidation(success, errorMessage);
     }
 
-    private void tagRead(GatewayContext context, final TagPath tagPath, JSONObject result) throws JSONException {
-        List<QualifiedValue> tagValues = context.getTagManager().read(Arrays.asList(tagPath));
+    private void tagRead(GatewayContext context, final TagPath tagPath, JSONObject result) throws JSONException, ExecutionException, InterruptedException {
+        List<QualifiedValue> tagValues = context.getTagManager().readAsync(Arrays.asList(tagPath)).get();
         QualifiedValue tagValue = tagValues.get(0);
 
         result.put("value", tagValue.getValue());
@@ -190,33 +192,20 @@ public class NodeREDServlet extends HttpServlet {
         result.put("timestamp", DF.format(tagValue.getTimestamp()));
     }
 
-    private void tagWrite(GatewayContext context, final TagPath tagPath, final Object writeValue, JSONObject result) throws JSONException {
+    private void tagWrite(GatewayContext context, final TagPath tagPath, final Object writeValue, JSONObject result) throws JSONException, ExecutionException, InterruptedException {
         result.put("inTagValue", writeValue);
 
-        List<Quality> writeResult = context.getTagManager().write(Arrays.asList(new WriteRequest<TagPath>() {
-            @Override
-            public TagPath getTarget() {
-                return tagPath;
-            }
+        List<QualityCode> writeResult = context.getTagManager().writeAsync(Arrays.asList(tagPath), Arrays.asList(writeValue)).get();
 
-            @Override
-            public Object getValue() {
-                return writeValue;
-            }
-        }), null, true);
-
-        Quality writeQuality = writeResult.get(0);
+        QualityCode writeQuality = writeResult.get(0);
         setQuality(result, writeQuality);
     }
 
-    private void setQuality(JSONObject result, Quality qual) throws JSONException {
+    private void setQuality(JSONObject result, QualityCode qual) throws JSONException {
         JSONObject quality = new JSONObject();
         quality.put("name", qual.getName());
         quality.put("isGood", qual.isGood());
-        if (qual instanceof DataQuality) {
-            quality.put("intValue", ((DataQuality) qual).getIntValue());
-        }
-
+        quality.put("intValue", qual.getCode());
         result.put("quality", quality);
     }
 

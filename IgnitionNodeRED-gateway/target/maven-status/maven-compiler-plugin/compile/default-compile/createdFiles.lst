@@ -1,8 +1,7 @@
 org\imdc\nodered\servlet\NodeREDServlet$APITokenValidation.class
+org\imdc\nodered\GatewayHook.class
 org\imdc\nodered\servlet\NodeREDServlet.class
 org\imdc\nodered\NodeREDAPITokens.class
 org\imdc\nodered\NodeREDAPITokenManagerPage.class
 org\imdc\nodered\NodeREDAPITokenManagerPage$1.class
 org\imdc\nodered\NodeREDAPITokens$1.class
-org\imdc\nodered\GatewayHook.class
-org\imdc\nodered\servlet\NodeREDServlet$1.class
