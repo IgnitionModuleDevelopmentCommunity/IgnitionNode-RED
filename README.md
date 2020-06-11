@@ -10,11 +10,11 @@ Once the module is installed, you must add an API Key and Secret that allow acce
 
 ## Requirements
 
-Ignition 7.9.0 or later
-Node-RED (node-red-contrib-ignition) nodes installed
+- Ignition 8.0  (Select prior branch for 7.9)
+- Node-RED (node-red-contrib-ignition) nodes installed
 
 ## Copyright and License
 
-Copyright 2017 Ignition Module Development Community
+Copyright 2020 Ignition Module Development Community
 
 Licensed under the Apache 2.0 license.
