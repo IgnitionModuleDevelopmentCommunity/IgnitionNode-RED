@@ -75,7 +75,7 @@ var IgnitionNodesImpl = (function () {
         var postOptions = {
             host: this.serverConfig.hostname,
             port: this.serverConfig.port,
-            path: "/main/system/node-red",
+            path: "/system/node-red",
             method: "POST",
             rejectUnauthorized: false,
             headers: {
