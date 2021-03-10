@@ -13,7 +13,7 @@
     <description>Adds support for Node-RED nodes</description>
 
     <properties>
-        <ignition-sdk-version>8.0.12</ignition-sdk-version>
+        <ignition-sdk-version>8.1.0</ignition-sdk-version>
     </properties>
 
     <modules>
