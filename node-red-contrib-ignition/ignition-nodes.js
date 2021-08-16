@@ -17,9 +17,11 @@ var NodeHandlers = require("./node-handlers");
 
 module.exports = function(RED) {
     NodeHandlers.setRED(RED);
-    RED.nodes.registerType("ignition-tag-read", NodeHandlers.createIgnitionTagReadNode);
+	RED.nodes.registerType("ignition-tag-read", NodeHandlers.createIgnitionTagReadNode);
     RED.nodes.registerType("ignition-tag-write", NodeHandlers.createIgnitionTagWriteNode);
-    RED.nodes.registerType("ignition-server", NodeHandlers.createIgnitionServerNode, {
+    RED.nodes.registerType("ignition-tag-read-ws", NodeHandlers.createIgnitionTagReadWSClientNode);
+	RED.nodes.registerType("ignition-tag-browse", NodeHandlers.createIgnitionTagBrowseNode);
+	RED.nodes.registerType("ignition-server", NodeHandlers.createIgnitionServerNode, {
         credentials: {
             apiToken: { type:"text" },
             secret: { type:"password" }

@@ -1,17 +1,21 @@
 {
   "name": "node-red-contrib-ignition-nodes",
-  "version": "1.5.7",
-  "description": "Adds support for reading and writing to tags in Ignition",
+  "version": "1.5.8",
+  "description": "Adds support for reading, writing, and browsing tags in Ignition",
   "dependencies": {},
   "keywords": [
     "node-red",
     "tag",
+	"tags",
     "tag read",
     "tag write",
+	"tag browse",
     "hmi",
     "scada",
     "Ignition",
-    "Inductive Automation"
+    "Inductive Automation",
+	"ws",
+	"websocket"
   ],
   "author": {
     "name": "Inductive Automation",

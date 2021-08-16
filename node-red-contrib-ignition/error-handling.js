@@ -28,14 +28,39 @@ module.exports = {
                 config.value = "payload";
         }
 
-        RED.util.setMessageProperty(msg, config.value, { ignitionResult: result }, true);
+        RED.util.setMessageProperty(msg, config.value, result, true);
 
         if(statusCode > 1){
             node.status({ fill: "red", shape: "ring", text: nodeErrorMessage });
             node.error(errorMessage, msg);
         } else {
             node.send(msg);
-            node.status({});
+            node.status({ fill:"green", shape:"dot", text:"Success" });
+        }
+    },
+
+	HandleWSResponse: function (RED, node, config, result, statusCode, nodeErrorMessage, errorMessage){
+        result.statusCode = statusCode;
+        result.errorMessage = errorMessage;
+		
+        var msg;
+		if (node.wholemsg) {
+			msg = result;
+			if (typeof msg !== "object" && !Array.isArray(msg) && (msg !== null)) {
+				msg = { payload:result };
+			}
+		} else {
+			msg = {
+				payload:result
+			};
+		}
+
+        if(statusCode > 1){
+            node.status({ fill: "red", shape: "ring", text: nodeErrorMessage });
+            node.error(errorMessage, msg);
+        } else {
+            node.send(msg);
+			node.status({ fill:"green", shape:"dot", text:"Value received" });
         }
     }
 };

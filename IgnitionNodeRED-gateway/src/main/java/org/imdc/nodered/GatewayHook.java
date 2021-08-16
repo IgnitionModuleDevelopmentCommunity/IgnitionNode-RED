@@ -8,6 +8,7 @@ import com.inductiveautomation.ignition.gateway.model.GatewayContext;
 import com.inductiveautomation.ignition.gateway.web.models.ConfigCategory;
 import com.inductiveautomation.ignition.gateway.web.models.IConfigTab;
 import org.imdc.nodered.servlet.NodeREDServlet;
+import org.imdc.nodered.servlet.NodeREDWebSocketServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,11 +36,13 @@ public class GatewayHook extends AbstractGatewayModuleHook {
     @Override
     public void startup(LicenseState licenseState) {
         gatewayContext.getWebResourceManager().addServlet(NodeREDServlet.PATH, NodeREDServlet.class);
+        gatewayContext.getWebResourceManager().addServlet(NodeREDWebSocketServlet.PATH, NodeREDWebSocketServlet.class);
     }
 
     @Override
     public void shutdown() {
         gatewayContext.getWebResourceManager().removeServlet(NodeREDServlet.PATH);
+        gatewayContext.getWebResourceManager().removeServlet(NodeREDWebSocketServlet.PATH);
         BundleUtil.get().removeBundle("NodeRED");
     }
 

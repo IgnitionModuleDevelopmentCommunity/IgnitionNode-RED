@@ -45,10 +45,12 @@
                     </projectScopes>
 
                     <moduleId>org.imdc.nodered.IgnitionNodeRED</moduleId>
-                    <moduleName>${project.parent.name}</moduleName>
-                    <moduleDescription>${project.description}</moduleDescription>
-                    <moduleVersion>1.0.2.2000</moduleVersion>
-                    <requiredIgnitionVersion>8.0.0</requiredIgnitionVersion>
+                    <moduleName>${module-name}</moduleName>
+                    <moduleDescription>${module-description}</moduleDescription>
+                    <moduleVersion>1.5.8.${timestamp}</moduleVersion>
+                    <requiredIgnitionVersion>${ignition-platform-version}</requiredIgnitionVersion>
+                    <requiredFrameworkVersion>8</requiredFrameworkVersion>
+                    <licenseFile>license.html</licenseFile>
 
                     <hooks>
                         <hook>

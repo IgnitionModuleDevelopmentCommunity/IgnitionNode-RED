@@ -12,9 +12,9 @@
         inputs:1,
         outputs:1,
         icon: "ignition.png",
-        palletteLabel: "ignition tag read",
+        paletteLabel: "ignition tag read",
         label: function() {
-            return this.name||"ignition-tag-read";
+            return this.name||"ignition tag read";
         },
         oneditprepare: function() {
             $("#node-input-valueType").val(this.valueType);
@@ -45,9 +45,75 @@
         outputs:1,
         align: "right",
         icon: "ignition.png",
-        palletteLabel: "ignition tag write",
+        paletteLabel: "ignition tag write",
         label: function() {
-            return this.name||"ignition-tag-write";
+            return this.name||"ignition tag write";
+        },
+        oneditprepare: function() {
+            $("#node-input-valueType").val(this.valueType);
+
+            $("#node-input-value").typedInput({
+                default: 'msg.payload',
+                typeField: $("#node-input-valueType"),
+                types:[
+                    'msg',
+                    {value:"msg.payload", label:"msg.payload", hasValue: false}
+                ]
+            });
+        }
+    });
+	
+	RED.nodes.registerType("ignition-tag-read-ws",{
+        category: "Ignition",
+        color: "#f7901e",
+        defaults: {
+            server: { value: "", type: "ignition-server", required: true },
+			wholemsg: {value:"false"},
+            hb: {value: "", validate: RED.validators.number(true) },
+			tagPath: { value: "" },
+			name: { value: "" }
+        },
+        inputs:1,
+        outputs:1,
+        icon: "ignition.png",
+        paletteLabel: "ignition tag read ws",
+        label: function() {
+            return this.name||"ignition tag read ws";
+        },
+        oneditprepare: function() {
+            var heartbeatActive = (this.hb && this.hb != "0");
+            $("#node-config-input-hb-cb").prop("checked",heartbeatActive);
+            $("#node-config-input-hb-cb").on("change", function(evt) {
+                $("#node-config-input-hb-row").toggle(this.checked);
+            });
+            $("#node-config-input-hb-cb").trigger("change");
+            if (!heartbeatActive) {
+                $("#node-config-input-hb").val("");
+            }
+        },
+        oneditsave: function() {
+            if (!$("#node-config-input-hb-cb").prop("checked")) {
+                $("#node-config-input-hb").val("0");
+            }
+        }
+    });
+	
+	RED.nodes.registerType("ignition-tag-browse",{
+        category: "Ignition",
+        color: "#f7901e",
+        defaults: {
+            server: { value: "", type: "ignition-server", required: true },
+			value: { value: "" },
+			valueType: { value: "msg.payload" },
+			tagPath: { value: "" },
+			name: { value: "" }
+        },
+        inputs:1,
+        outputs:1,
+        icon: "ignition.png",
+        paletteLabel: "ignition tag browse",
+        label: function() {
+            return this.name||"ignition tag browse";
         },
         oneditprepare: function() {
             $("#node-input-valueType").val(this.valueType);
@@ -69,6 +135,7 @@
             hostname: { value:"localhost", required:true },
             port: { value:"8088", validate:RED.validators.number(), required:true },
             ssl: { value:false },
+			tls: {type:"tls-config",required: false},
             defaultTagProvider: { value:"edge" },
 			name: { value: "" }
         },
@@ -76,8 +143,21 @@
             apiToken: { type:"text", required:true },
             secret: { type:"password", required:true }
         },
+        paletteLabel: "ignition server",
         label: function() {
             return this.name||((this.ssl ? "https" : "http") + "://" + this.hostname + ":" + this.port);
+        },
+        oneditprepare: function() {
+			$("#node-config-input-ssl").prop("checked",this.ssl);
+			$("#node-config-input-ssl").on("change", function(evt) {
+                $(".node-config-row-tls").toggle(this.checked);
+            });
+			$("#node-config-input-ssl").trigger("change");
+        },
+        oneditsave: function() {
+            if (!$("#node-config-input-ssl").val()) {
+                $("#node-config-input-tls").val("_ADD_");
+            }
         }
     });
 </script>
@@ -92,11 +172,11 @@
         <input type="hidden" id="node-input-valueType">
     </div>
     <div class="form-row">
-        <label for="node-input-tagPath"><i class="icon-tag"></i> Tag Path</label>
+        <label for="node-input-tagPath"><i class="fa fa-tag"></i> Tag Path</label>
         <input type="text" id="node-input-tagPath" placeholder="Tag Path">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <label for="node-input-name">Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
@@ -111,15 +191,63 @@
         <input type="hidden" id="node-input-valueType">
     </div>
     <div class="form-row">
-        <label for="node-input-tagPath"><i class="icon-tag"></i> Tag Path</label>
+        <label for="node-input-tagPath"><i class="fa fa-tag"></i> Tag Path</label>
         <input type="text" id="node-input-tagPath" placeholder="Tag Path">
     </div>
     <div class="form-row">
-        <label for="node-input-tagValue"><i class="icon-tag"></i> Tag Value</label>
+        <label for="node-input-tagValue">Tag Value</label>
         <input type="text" id="node-input-tagValue" placeholder="Tag Value">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <label for="node-input-name">Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+<script type="text/x-red" data-template-name="ignition-tag-read-ws">
+    <div class="form-row">
+        <label for="node-input-server"><i class="fa fa-globe"></i> Ignition Server</label>
+        <input type="text" id="node-input-server">
+    </div>
+     <div class="form-row">
+        <label for="node-config-input-wholemsg">Send/Receive</label>
+		<select type="text" id="node-config-input-wholemsg" style="width: 70%;">
+            <option value="false">payload</option>
+            <option value="true">entire message</option>
+        </select>
+    </div>
+	<div class="form-row" style="display: flex; align-items: center; min-height: 34px">
+        <label for="node-config-input-hb-cb">Send heartbeat</label>
+        <input type="checkbox" style="margin: 0 8px; width:auto" id="node-config-input-hb-cb">
+        <span id="node-config-input-hb-row" class="hide" >
+            <input type="text" style="width: 70px; margin-right: 3px" id="node-config-input-hb">
+            <span>seconds</span>
+        </span>
+    </div>
+    <div class="form-row">
+        <label for="node-input-tagPath"><i class="fa fa-tag"></i> Tag Path</label>
+        <input type="text" id="node-input-tagPath" placeholder="Tag Path">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name">Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+<script type="text/x-red" data-template-name="ignition-tag-browse">
+    <div class="form-row">
+        <label for="node-input-server"><i class="fa fa-globe"></i> Ignition Server</label>
+        <input type="text" id="node-input-server">
+    </div>
+     <div class="form-row">
+        <label for="node-input-value"><i class="fa fa-pencil"></i> Value</label>
+        <input type="text" id="node-input-value" style="width:300px">
+        <input type="hidden" id="node-input-valueType">
+    </div>
+    <div class="form-row">
+        <label for="node-input-tagPath"><i class="fa fa-tag"></i> Tag Path</label>
+        <input type="text" id="node-input-tagPath" placeholder="Tag Path">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name">Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
@@ -136,6 +264,10 @@
         <label>&nbsp;</label>
         <input type="checkbox" id="node-config-input-ssl" placeholder="SSL" style="display: inline-block; width: auto; vertical-align: top;">
         <label for="node-config-input-ssl" style="width: 70%;">Use SSL?</label>
+    </div>
+	<div class="form-row node-config-row-tls hide">
+        <label for="node-config-input-tls">TLS Configuration</label>
+        <input type="text" id="node-config-input-tls">
     </div>
     <div class="form-row">
         <label for="node-config-input-apiToken" style="width: 110px"><i class="fa fa-user"></i> API Token</label>
@@ -158,8 +290,8 @@
     <p><b>Hostname</b> - The hostname or IP address of the Ignition server.</p>
     <p><b>Port</b> - The HTTP or HTTPS port of the Ignition server. Use the HTTP port if not using SSL and the HTTPS port if using SSL.</p>
     <p><b>Use SSL?</b> - Whether or not to use SSL. The node will use HTTPS if true and HTTP if false.</p>
+	<p><b>TLS Configuration</b> - Configuration options for TLS connections when using SSL.</p>
     <p><b>API Token</b> and <b>Secret</b> - must match one of the entries in Ignition's Node-RED API token configuration.</p>
-    <p><b>Use SSL?</b> - Whether or not to use SSL. The node will use HTTPS if true and HTTP if false.</p>
     <p><b>Default Tag Provider</b> - The realtime tag provider to use if not specified in the tag path. See <a href="https://docs.inductiveautomation.com:8443/display/DOC79/Understanding+Tags">documentation</a> for more information on realtime tag providers.</p>
 </script>
 <script type="text/x-red" data-help-name="ignition-tag-read">
@@ -171,25 +303,79 @@
     <h2>Returned Values</h2>
     <p>The result is a qualified value object that includes the value, quality, and timestamp of the tag:</p>
     <pre>
-    "ignitionResult":
-    {
-      "defaultTagProvider": "edge",
-      "inTagPath": "folder/path/tagname",
-      "tagPath": "[edge]folder/path/tagname",
-      "value": "value",
-      "quality":
-      {
-        "isGood": true,
-        "intValue": 192,
-        "name": "GOOD_DATA"
-      },
-      "timestamp": "2017-01-01 08:00:00"
-    }
+"ignitionResult":
+{
+	"tagPath": "[edge]folder/path/tagname",
+	"value": "value",
+	"quality":
+	{
+		"isGood": true,
+		"intValue": 192,
+		"name": "GOOD_DATA"
+	},
+	"timestamp": "2017-01-01 08:00:00"
+}
     </pre>
+	<p>If reading multiple tags, the result is an array of qualified values in the order specified in the string tag path.</p>
+	<pre>
+"ignitionResult":
+{
+	"values": [
+		{
+			"tagPath": "[edge]folder/path/tagname",
+			"value": "value",
+			"quality":
+			{
+				"isGood": true,
+				"intValue": 192,
+				"name": "GOOD_DATA"
+			},
+			"timestamp": "2017-01-01 08:00:00"
+		},
+		{
+			"tagPath": "[edge]folder/path/tagname2",
+			"value": "value2",
+			"quality":
+			{
+				"isGood": true,
+				"intValue": 192,
+				"name": "GOOD_DATA"
+			},
+			"timestamp": "2017-01-01 08:00:00"
+		}
+	]
+}
+    </pre>
+	<h2>Reading Multiple Tags</h2>
+	<p>The <b>tag path</b> setting accepts a comma separated list of tag paths to read from Ignition. For example:</p>
+    <p><b>[Tag Provider]folder/path/tagname1,[Tag Provider]folder/path/tagname2</b></p>
+	<p>You can also pass in an array of tag paths in the payload. See dynamic settings.</p>
     <h2>Dynamic Settings</h2>
-        <p>If the incoming message's payload is an object with the following properties, then they will be used over any settings in the node itself.</code>
-        <p><code>msg.payload.defaultTagProvider</code> - the realtime tag provider name to use if not specified in the tag path.</p>
-        <p><code>msg.payload.tagPath</code> - a valid Ignition tag path.</p>
+	<p>If the incoming message's payload is an object with the following properties, then they will be used over any settings in the node itself.</code>
+	<p><code>msg.payload.defaultTagProvider</code> - the realtime tag provider name to use if not specified in the tag path.</p>
+	<p><code>msg.payload.tagPath</code> - a valid Ignition tag path or tag paths. Accepts either an array of tag paths or a string comma separated list of tag paths.</p>
+	<p>Examples:</p>
+	<p>Reading single tag:</p>
+	<pre>
+{
+	"tagPath": "[default]Realistic/Realistic0"
+}
+    </pre>
+	<p>Reading multiple tags as string:</p>
+	<pre>
+{
+	"tagPath": "[default]Realistic/Realistic0,[default]Realistic/Realistic1"
+}
+    </pre>
+	<p>Reading multiple tags as array:</p>
+	<pre>
+{
+	"tagPath": [
+		"[default]Realistic/Realistic0",
+		"[default]Realistic/Realistic1"
+	]
+}
+    </pre>
     <h2>Error Handling</h2>
     <p>If an error occurs, an error will be thrown that can be caught with a Catch node. No output message will be sent, so the flow will not continue.</p>
     <p>In that case, the Catch node's <code>msg</code> will have <u>one</u> of the following properties:
@@ -209,26 +395,349 @@
     <h2>Returned Values</h2>
     <p>The result is a qualified value object that includes the value, quality, and timestamp of the tag:</p>
     <pre>
-    "ignitionResult":
-    {
-      "defaultTagProvider": "edge",
-      "inTagPath": "folder/path/tagname",
-      "inTagValue": "value",
-      "tagPath": "[edge]folder/path/tagname",
-      "value": "value",
-      "quality":
-      {
-        "isGood": true,
-        "intValue": 192,
-        "name": "GOOD_DATA"
-      }
-    }
+"ignitionResult":
+{
+	"tagPath": "[edge]folder/path/tagname",
+	"value": "value",
+	"quality":
+	{
+		"isGood": true,
+		"intValue": 192,
+		"name": "GOOD_DATA"
+	}
+}
     </pre>
+	<p>If writing multiple tags, the result is an array of qualified values in the order specified in the array or string tag path.</p>
+	<pre>
+"ignitionResult":
+{
+	"values": [
+		{
+			"tagPath": "[edge]folder/path/tagname",
+			"value": "value",
+			"quality":
+			{
+				"isGood": true,
+				"intValue": 192,
+				"name": "GOOD_DATA"
+			}
+		},
+		{
+			"tagPath": "[edge]folder/path/tagname2",
+			"value": "value2",
+			"quality":
+			{
+				"isGood": true,
+				"intValue": 192,
+				"name": "GOOD_DATA"
+			}
+		}
+	]
+}
+    </pre>
+	<h2>Writing Multiple Tags</h2>
+	<p>The <b>tag path</b> setting accepts a comma separated list of tag paths to write to Ignition. For example:</p>
+    <p><b>[Tag Provider]folder/path/tagname1,[Tag Provider]folder/path/tagname2</b></p>
+	<p>The value with either be a single value written to all tags or a comma separated list of values, matching the number of tag paths specified. For example:</p>
+	<p><b>valueForTagPath1,valueForTagPath2</b></p>
+	<p>You can also pass in an array of tag paths and tag values in the payload. See dynamic settings.</p>
     <h2>Dynamic Settings</h2>
-        <p>If the incoming message's payload is an object with the following properties, then they will be used over any settings in the node itself.</code>
-        <p><code>msg.payload.defaultTagProvider</code> - the realtime tag provider name to use if not specified in the tag path.</p>
-        <p><code>msg.payload.tagPath</code> - a valid Ignition tag path.</p>
-        <p><code>msg.payload.tagValue</code> - the value to write.</p>
+	<p>If the incoming message's payload is an object with the following properties, then they will be used over any settings in the node itself.</code>
+	<p><code>msg.payload.defaultTagProvider</code> - the realtime tag provider name to use if not specified in the tag path.</p>
+	<p><code>msg.payload.tagPath</code> - a valid Ignition tag path or tag paths. Accepts either an array of tag paths or a string comma separated list of tag paths.</p>
+	<p><code>msg.payload.tagValue</code> - the value or values to write. Accepts either a single value, an array of values, or a string comma separated list of values.</p>
+	<p><code>msg.payload.values</code> - Optional array of tagPath/tagValue key pairs to use instead of msg.payload.tagPath and msg.payload.tagValue.</p>
+	<p>Examples:</p>
+	<p>Writing to a single tag:</p>
+	<pre>
+{
+	"tagPath": "[default]Writeable/WriteableInteger1",
+	"tagValue": 100
+}
+    </pre>
+	<p>Writing to multiple tags as strings:</p>
+	<pre>
+{
+	"tagPath": "[default]Writeable/WriteableInteger1,[default]Writeable/WriteableInteger2",
+	"tagValue": "100,200"
+}
+    </pre>
+	<p>Writing to multiple tags as arrays:</p>
+	<pre>
+{
+	"tagPath": [
+		"[default]Writeable/WriteableInteger1",
+		"[default]Writeable/WriteableInteger2"
+	],
+	"tagValue": [
+		300,
+		400
+	]
+}
+	</pre>
+	<p>Writing to multiple tags with a deep structure:</p>
+	<pre>
+{
+    "tagPath": "[default]folder",
+    "tagValue": {
+		"tagname1": 20,
+		"subfolder": {
+			"tagname2": 30
+		}
+    }
+}
+	</pre>
+	<p>Writing to multiple tags using msg.payload.values:</p>
+	<pre>
+{
+	"values": 
+	[
+		{
+			"tagPath": "[default]Writeable/WriteableInteger1",
+			"tagValue": 600
+		},
+		{
+			"tagPath": "[default]Writeable/WriteableInteger2",
+			"tagValue": 700
+		}
+	]
+}
+    </pre>
+    <h2>Error Handling</h2>
+    <p>If an error occurs, an error will be thrown that can be caught with a Catch node. No output message will be sent, so the flow will not continue.</p>
+    <p>In that case, the Catch node's <code>msg</code> will have <u>one</u> of the following properties:
+    </p>
+    <ul>
+      <li><code>msg.ignitionResult.statusCode</code> - the status of the request (1=success, 2=Node-RED failure, 3=request failure, 4=Ignition failure).</li>
+      <li><code>msg.ignitionResult.errorMessage</code> - the error message of the failed request.</li>
+    </ul>
+</script>
+<script type="text/x-red" data-help-name="ignition-tag-read-ws">
+    <p>A node for reading tag values from Ignition over web sockets. That allows for a poll free flow. You subscribe to tags you are interested in and Ignition will values when they change.</p>
+    <h2>Basic Usage</h2>
+    <p>The <b>tag path</b> must be a valid Ignition tag path. A tag path looks like this:</p>
+    <p><b>[Tag Provider]folder/path/tagname</b></p>
+    <p>If the tag provider, <b>[Tag Provider]</b>, is left out of the tag path, the default tag provider will be used from the server configuration.</p>
+	<p>Using a <b>heartbeat</b> ensures a communication with Ignition at a specific interval even if tags are not changing (to keep the connection alive).</p>
+	<h2>Wildcard Subscriptions</h2>
+    <p>The node supports wildcard subscriptions to read all values from a specific folder. Simply use <b>*</b> in the tag path:</p>
+	<p><b>[Tag Provider]folder/*</b> - Reads all tags inside <b>folder</b></p>
+	<p><b>[Tag Provider]folder/*/tagname</b> - Reads all tags called <b>tagname</b> within folders contained in <b>folder</b></p>
+    <h2>Returned Values</h2>
+    <p>The result is a qualified value object that includes the value, quality, and timestamp of the tag:</p>
+    <pre>
+"ignitionResult":
+{
+	"tagPath": "[edge]folder/path/tagname",
+	"value": "value",
+	"quality":
+	{
+		"isGood": true,
+		"intValue": 192,
+		"name": "GOOD_DATA"
+	},
+	"timestamp": "2017-01-01 08:00:00"
+}
+    </pre>
+	<p>If subscribing to multiple tags, the result will always be a single tag value. So, if 2 tags change at the same time the node will output 2 separate values.</p>
+	<h2>Subscribing to Multiple Tags</h2>
+	<p>The <b>tag path</b> setting accepts a comma separated list of tag paths to read from Ignition. For example:</p>
+    <p><b>[Tag Provider]folder/path/tagname1,[Tag Provider]folder/path/tagname2</b></p>
+	<p>You can also pass in an array of tag paths in the payload. See dynamic settings.</p>
+    <h2>Dynamic Settings</h2>
+	<p>If the incoming message's payload is an object with the following properties, then they will be used over any settings in the node itself.</code>
+	<p><code>msg.payload.defaultTagProvider</code> - the realtime tag provider name to use if not specified in the tag path.</p>
+	<p><code>msg.payload.tagPath</code> - a valid Ignition tag path or tag paths. Accepts either an array of tag paths or a string comma separated list of tag paths. Tag paths that are passed in will override any existing subscriptions.</p>
+	<p>Examples:</p>
+	<p>Reading single tag:</p>
+	<pre>
+{
+	"tagPath": "[default]Realistic/Realistic0"
+}
+    </pre>
+	<p>Reading multiple tags using wildcard:</p>
+	<pre>
+{
+	"tagPath": "[default]Realistic/*"
+}
+    </pre>
+	<p>Reading multiple tags as string:</p>
+	<pre>
+{
+	"tagPath": "[default]Realistic/Realistic0,[default]Realistic/Realistic1"
+}
+    </pre>
+	<p>Reading multiple tags as string with wildcard:</p>
+	<pre>
+{
+	"tagPath": "[default]Realistic/Realistic0,[default]Ramp/*"
+}
+    </pre>
+	<p>Reading multiple tags as array:</p>
+	<pre>
+{
+	"tagPath": [
+		"[default]Realistic/Realistic0",
+		"[default]Realistic/Realistic1"
+	]
+}
+    </pre>
+	<p>Reading multiple tags as array with wildcard:</p>
+	<pre>
+{
+	"tagPath": [
+		"[default]Realistic/Realistic0",
+		"[default]Ramp/*"
+	]
+}
+    </pre>
+    <h2>Error Handling</h2>
+    <p>If an error occurs, an error will be thrown that can be caught with a Catch node. No output message will be sent, so the flow will not continue.</p>
+    <p>In that case, the Catch node's <code>msg</code> will have <u>one</u> of the following properties:
+    </p>
+    <ul>
+      <li><code>msg.ignitionResult.statusCode</code> - the status of the request (1=success, 2=Node-RED failure, 3=request failure, 4=Ignition failure).</li>
+      <li><code>msg.ignitionResult.errorMessage</code> - the error message of the failed request.</li>
+    </ul>
+</script>
+<script type="text/x-red" data-help-name="ignition-tag-browse">
+    <p>A node for browsing tags in Ignition.</p>
+    <h2>Basic Usage</h2>
+    <p>The <b>tag path</b> must be a valid Ignition tag path. A tag path looks like this:</p>
+    <p><b>[Tag Provider]folder/path/tagname</b></p>
+    <p>If the tag provider, <b>[Tag Provider]</b>, is left out of the tag path, the default tag provider will be used from the server configuration.</p>
+    <h2>Returned Values</h2>
+    <p>The result is an array of tags including tag path, name, tag type, data type, and current value:</p>
+    <pre>
+"ignitionResult":
+{
+	"tagPath":"[edge]folder",
+	"tags":
+	[
+		{
+			"tagPath": "[edge]folder/tagname1",
+			"name": "tagname1",
+			"tagType": "AtomicTag",
+			"dataType": "Int4",
+			"value": 56,
+			"quality":
+			{
+				"isGood": true,
+				"intValue": 192,
+				"name": "GOOD_DATA"
+			},
+			"timestamp": "2017-01-01 08:00:00"
+		},
+		{
+			"tagPath": "[edge]folder/tagname2",
+			"name": "tagname2",
+			"tagType": "AtomicTag",
+			"dataType": "Boolean",
+			"value": false,
+			"quality":
+			{
+				"isGood": true,
+				"intValue": 192,
+				"name": "GOOD_DATA"
+			},
+			"timestamp": "2017-01-01 08:00:00"
+		}
+	]
+}
+    </pre>
+	<p>If browsing for multiple tags, the result is an array of qualified values in the order specified in the string tag path.</p>
+	<pre>
+"ignitionResult":
+{
+	"values": 
+	[
+		{
+			"tagPath":"[edge]folder",
+			"tags":
+			[
+				{
+					"tagPath": "[edge]folder/tagname1",
+					"name": "tagname1",
+					"tagType": "AtomicTag",
+					"dataType": "Int4",
+					"value": 56,
+					"quality":
+					{
+						"isGood": true,
+						"intValue": 192,
+						"name": "GOOD_DATA"
+					},
+					"timestamp": "2017-01-01 08:00:00"
+				},
+				{
+					"tagPath": "[edge]folder/tagname2",
+					"name": "tagname2",
+					"tagType": "AtomicTag",
+					"dataType": "Boolean",
+					"value": false,
+					"quality":
+					{
+						"isGood": true,
+						"intValue": 192,
+						"name": "GOOD_DATA"
+					},
+					"timestamp": "2017-01-01 08:00:00"
+				}
+			]
+		},
+		{
+			"tagPath":"[edge]folder2",
+			"tags":
+			[
+				{
+					"tagPath": "[edge]folder2/tagname1",
+					"name": "tagname1",
+					"tagType": "AtomicTag",
+					"dataType": "Int4",
+					"value": 45,
+					"quality":
+					{
+						"isGood": true,
+						"intValue": 192,
+						"name": "GOOD_DATA"
+					},
+					"timestamp": "2017-01-01 08:00:00"
+				}
+			]
+		}
+	]
+}
+    </pre>
+	<h2>Browsing for Multiple Tags</h2>
+	<p>The <b>tag path</b> setting accepts a comma separated list of tag paths to browse in Ignition. For example:</p>
+    <p><b>[Tag Provider]folder/path/tagname1,[Tag Provider]folder/path/tagname2</b></p>
+	<p>You can also pass in an array of tag paths in the payload. See dynamic settings.</p>
+    <h2>Dynamic Settings</h2>
+	<p>If the incoming message's payload is an object with the following properties, then they will be used over any settings in the node itself.</code>
+	<p><code>msg.payload.defaultTagProvider</code> - the realtime tag provider name to use if not specified in the tag path.</p>
+	<p><code>msg.payload.tagPath</code> - a valid Ignition tag path or tag paths. Accepts either an array of tag paths or a string comma separated list of tag paths.</p>
+	<p>Examples:</p>
+	<p>Browsing for single tag:</p>
+	<pre>
+{
+	"tagPath": "[default]Realistic/Realistic0"
+}
+    </pre>
+	<p>Browsing for multiple tags as string:</p>
+	<pre>
+{
+	"tagPath": "[default]Realistic/Realistic0,[default]Realistic/Realistic1"
+}
+    </pre>
+	<p>Browsing for multiple tags as array:</p>
+	<pre>
+{
+	"tagPath": [
+		"[default]Realistic/Realistic0",
+		"[default]Realistic/Realistic1"
+	]
+}
+    </pre>
     <h2>Error Handling</h2>
     <p>If an error occurs, an error will be thrown that can be caught with a Catch node. No output message will be sent, so the flow will not continue.</p>
     <p>In that case, the Catch node's <code>msg</code> will have <u>one</u> of the following properties:

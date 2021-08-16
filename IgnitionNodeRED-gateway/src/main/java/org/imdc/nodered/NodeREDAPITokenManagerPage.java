@@ -11,9 +11,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by travis.cox on 9/12/2017.
- */
 public class NodeREDAPITokenManagerPage extends RecordActionTable<NodeREDAPITokens> {
 
     transient List<ICalculatedField<NodeREDAPITokens>> calcFields;

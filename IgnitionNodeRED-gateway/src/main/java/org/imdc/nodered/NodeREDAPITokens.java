@@ -9,9 +9,6 @@ import simpleorm.dataset.SRecordInstance;
 import simpleorm.dataset.validation.SValidatorI;
 import simpleorm.utils.SException;
 
-/**
- * Created by travis.cox on 9/12/2017.
- */
 public class NodeREDAPITokens extends PersistentRecord {
     public static final RecordMeta<NodeREDAPITokens> META = new RecordMeta<>(
             NodeREDAPITokens.class,

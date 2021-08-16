@@ -1,16 +1,18 @@
 package org.imdc.nodered.servlet;
 
+import com.inductiveautomation.ignition.common.browsing.BrowseFilter;
+import com.inductiveautomation.ignition.common.browsing.Results;
 import com.inductiveautomation.ignition.common.model.values.QualifiedValue;
 import com.inductiveautomation.ignition.common.model.values.QualityCode;
+import com.inductiveautomation.ignition.common.tags.browsing.NodeDescription;
 import com.inductiveautomation.ignition.common.tags.model.TagPath;
 import com.inductiveautomation.ignition.common.tags.paths.parser.TagPathParser;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
-import org.imdc.nodered.NodeREDAPITokens;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import simpleorm.dataset.SQuery;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -19,15 +21,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-/**
- * Created by travis.cox on 8/31/2017.
- */
 public class NodeREDServlet extends HttpServlet {
-
     public static final String PATH = "node-red";
     private static final SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -71,11 +71,11 @@ public class NodeREDServlet extends HttpServlet {
         JSONObject ret = new JSONObject();
 
         if ("application/json".equals(contentType)) {
-            String jsonString = readAll(req);
+            String jsonString = reqToJSON(req);
             try {
                 input = new JSONObject(jsonString);
             } catch (JSONException ex) {
-                logger.warn("Unable to parse POST data as JSON:\n" + jsonString, ex);
+                logger.warn("Unable to parse POST data as JSON: " + ex.getMessage(), ex);
             }
         }
 
@@ -90,11 +90,11 @@ public class NodeREDServlet extends HttpServlet {
             try {
                 String apiToken = input.getString("apiToken");
                 String secret = input.getString("secret");
-                APITokenValidation validation = validateToken(context, apiToken, secret);
+                APITokenValidation validation = APITokenValidation.validateToken(context, apiToken, secret);
 
                 if (validation.isSuccess()) {
                     String command = input.getString("command");
-                    if (command.equals("tagRead") || command.equals("tagWrite")) {
+                    if (command.equals("tagRead") || command.equals("tagWrite") || command.equals("tagBrowse")) {
                         String defaultTagProvider = "default";
 
                         try {
@@ -106,20 +106,59 @@ public class NodeREDServlet extends HttpServlet {
                             defaultTagProvider = "default";
                         }
 
-                        String tagPathStr = input.getString("tagPath");
-                        TagPath tagPath = TagPathParser.parseSafe(defaultTagProvider, tagPathStr);
-                        if (tagPath == null) {
-                            errorMessage = "Tag path '" + tagPathStr + "' is invalid";
-                        } else {
-                            result.put("defaultTagProvider", defaultTagProvider);
-                            result.put("inTagPath", tagPathStr);
-                            result.put("tagPath", tagPath.toStringFull());
+                        List<TagPath> tagPaths = new ArrayList<>();
 
+                        if (input.has("tagPath")) {
+                            String tagPathStr = input.getString("tagPath");
+                            TagPath tagPath = TagPathParser.parseSafe(defaultTagProvider, tagPathStr);
+                            if (tagPath == null) {
+                                errorMessage = "Tag path '" + tagPathStr + "' is invalid";
+                            }
+                            tagPaths.add(tagPath);
+                        } else {
+                            JSONArray tagPathsArray = input.getJSONArray("tagPaths");
+                            for (int i = 0; i < tagPathsArray.length(); i++) {
+                                String tagPathStr = tagPathsArray.getString(i);
+                                TagPath tagPath = TagPathParser.parseSafe(defaultTagProvider, tagPathStr);
+                                if (tagPath == null) {
+                                    errorMessage = "Tag path '" + tagPathStr + "' is invalid";
+                                }
+                                tagPaths.add(tagPath);
+                            }
+                        }
+
+                        if (tagPaths.size() == 0) {
+                            errorMessage = "No tags supplied";
+                        }
+
+                        if (errorMessage == null) {
                             if (command.equals("tagRead")) {
-                                tagRead(context, tagPath, result);
+                                tagRead(context, tagPaths, result);
+                            } else if (command.equals("tagBrowse")) {
+                                tagBrowse(context, tagPaths, result);
                             } else if (command.equals("tagWrite")) {
-                                Object writeValue = input.get("value");
-                                tagWrite(context, tagPath, writeValue, result);
+                                List<Object> values = new ArrayList<>();
+                                if (input.has("value")) {
+                                    values.add(input.get("value"));
+                                } else {
+                                    JSONArray valuesArray = input.getJSONArray("values");
+                                    for (int i = 0; i < valuesArray.length(); i++) {
+                                        Object value = valuesArray.get(i);
+                                        values.add(value);
+                                    }
+                                }
+
+                                if (values.size() == 1 && tagPaths.size() > 1) {
+                                    for (int i = 0; i < (tagPaths.size() - 1); i++) {
+                                        values.add(values.get(0));
+                                    }
+                                }
+
+                                if (values.size() != tagPaths.size()) {
+                                    errorMessage = "Number of tag paths (" + tagPaths.size() + ") does not match values (" + values.size() + ")";
+                                } else {
+                                    tagWrite(context, tagPaths, values, result);
+                                }
                             }
                         }
                     } else {
@@ -129,11 +168,11 @@ public class NodeREDServlet extends HttpServlet {
                     errorMessage = validation.getErrorMessage();
                 }
             } catch (JSONException ex) {
-                logger.warn("Incorrect format for JSON POST data: " + input.toString(), ex);
-                errorMessage = "Incorrect format for JSON POST data: " + input.toString();
-            } catch (ExecutionException | InterruptedException ex){
-                logger.warn("Error executing command: " + input.toString(), ex);
-                errorMessage = "Error executing command: " + input.toString();
+                logger.warn("Incorrect format for JSON POST data", ex);
+                errorMessage = "Incorrect format for JSON POST data: " + ex.getMessage();
+            } catch (ExecutionException | InterruptedException ex) {
+                logger.warn("Error executing command", ex);
+                errorMessage = "Error executing command: " + ex.getMessage();
             }
 
             try {
@@ -142,9 +181,11 @@ public class NodeREDServlet extends HttpServlet {
                 if (errorMessage != null) {
                     statusCode = 0;
                     logger.warn(errorMessage);
-                    ret.put("errorMessage", errorMessage);
+                } else {
+                    errorMessage = "";
                 }
 
+                ret.put("errorMessage", errorMessage);
                 ret.put("statusCode", statusCode);
             } catch (Exception ignored) {
             }
@@ -154,54 +195,34 @@ public class NodeREDServlet extends HttpServlet {
             resp.setContentType("application/json");
             ret.write(resp.getWriter());
         } catch (Exception ex) {
-            logger.warn("Error writing JSON response:\n" + ret.toString(), ex);
+            logger.warn("Error writing JSON response", ex);
             resp.sendError(500, ex.getMessage());
         }
     }
 
-    private APITokenValidation validateToken(GatewayContext context, String apiToken, String secret) {
-        boolean success = true;
-        String errorMessage = null;
-
-        SQuery<NodeREDAPITokens> query = new SQuery<>(NodeREDAPITokens.META);
-        query.eq(NodeREDAPITokens.APIToken, apiToken);
-        NodeREDAPITokens r = context.getPersistenceInterface().queryOne(query);
-        if (r == null) {
-            success = false;
-            errorMessage = "Invalid API token and secret";
+    public static void setTagValue(List<TagPath> tagPaths, List<QualifiedValue> tagValues, JSONObject result) throws JSONException {
+        if (tagPaths.size() == 1) {
+            result.put("tagPath", tagPaths.get(0).toStringFull());
+            result.put("value", tagValues.get(0).getValue());
+            setQuality(result, tagValues.get(0).getQuality());
+            result.put("timestamp", DF.format(tagValues.get(0).getTimestamp()));
         } else {
-            if (!r.getBoolean(NodeREDAPITokens.Enabled)) {
-                success = false;
-                errorMessage = "API token and secret is disabled";
-            } else if (!r.getString(NodeREDAPITokens.Secret).equals(secret)) {
-                success = false;
-                errorMessage = "Invalid API token and secret";
+            JSONArray resultValues = new JSONArray();
+            for (int i = 0; i < tagPaths.size(); i++) {
+                TagPath tagPath = tagPaths.get(i);
+                QualifiedValue tagValue = tagValues.get(i);
+                JSONObject tagObject = new JSONObject();
+                tagObject.put("tagPath", tagPath.toStringFull());
+                tagObject.put("value", tagValue.getValue());
+                setQuality(tagObject, tagValue.getQuality());
+                tagObject.put("timestamp", DF.format(tagValue.getTimestamp()));
+                resultValues.put(tagObject);
             }
+            result.put("values", resultValues);
         }
-
-        return new APITokenValidation(success, errorMessage);
     }
 
-    private void tagRead(GatewayContext context, final TagPath tagPath, JSONObject result) throws JSONException, ExecutionException, InterruptedException {
-        List<QualifiedValue> tagValues = context.getTagManager().readAsync(Arrays.asList(tagPath)).get();
-        QualifiedValue tagValue = tagValues.get(0);
-
-        result.put("value", tagValue.getValue());
-
-        setQuality(result, tagValue.getQuality());
-        result.put("timestamp", DF.format(tagValue.getTimestamp()));
-    }
-
-    private void tagWrite(GatewayContext context, final TagPath tagPath, final Object writeValue, JSONObject result) throws JSONException, ExecutionException, InterruptedException {
-        result.put("inTagValue", writeValue);
-
-        List<QualityCode> writeResult = context.getTagManager().writeAsync(Arrays.asList(tagPath), Arrays.asList(writeValue)).get();
-
-        QualityCode writeQuality = writeResult.get(0);
-        setQuality(result, writeQuality);
-    }
-
-    private void setQuality(JSONObject result, QualityCode qual) throws JSONException {
+    public static void setQuality(JSONObject result, QualityCode qual) throws JSONException {
         JSONObject quality = new JSONObject();
         quality.put("name", qual.getName());
         quality.put("isGood", qual.isGood());
@@ -209,7 +230,73 @@ public class NodeREDServlet extends HttpServlet {
         result.put("quality", quality);
     }
 
-    private String readAll(HttpServletRequest req) throws IOException {
+    private JSONArray browseTags(GatewayContext context, TagPath tagPath) throws JSONException, ExecutionException, InterruptedException {
+        JSONArray tagsArray = new JSONArray();
+        Results<NodeDescription> browseResults = context.getTagManager().browseAsync(tagPath, BrowseFilter.NONE).get();
+        Collection<NodeDescription> tagDescriptions = browseResults.getResults();
+        Iterator<NodeDescription> iterator = tagDescriptions.iterator();
+        while (iterator.hasNext()) {
+            NodeDescription tagDesc = iterator.next();
+            JSONObject tagObject = new JSONObject();
+            tagObject.put("tagPath", tagPath.toStringFull() + "/" + tagDesc.getName());
+            tagObject.put("name", tagDesc.getName());
+            tagObject.put("tagType", tagDesc.getObjectType().toString());
+            tagObject.put("dataType", tagDesc.getDataType().name());
+            tagObject.put("value", tagDesc.getCurrentValue().getValue());
+            setQuality(tagObject, tagDesc.getCurrentValue().getQuality());
+            tagObject.put("timestamp", DF.format(tagDesc.getCurrentValue().getTimestamp()));
+            tagsArray.put(tagObject);
+        }
+
+        return tagsArray;
+    }
+
+    private void tagBrowse(GatewayContext context, final List<TagPath> tagPaths, JSONObject result) throws JSONException, ExecutionException, InterruptedException {
+        if (tagPaths.size() == 1) {
+            result.put("tagPath", tagPaths.get(0).toStringFull());
+            result.put("tags", browseTags(context, tagPaths.get(0)));
+        } else {
+            JSONArray resultValues = new JSONArray();
+            for (int i = 0; i < tagPaths.size(); i++) {
+                JSONObject tagObject = new JSONObject();
+                TagPath tagPath = tagPaths.get(i);
+                tagObject.put("tagPath", tagPath.toStringFull());
+                tagObject.put("tags", browseTags(context, tagPath));
+                resultValues.put(tagObject);
+            }
+            result.put("values", resultValues);
+        }
+    }
+
+    private void tagRead(GatewayContext context, final List<TagPath> tagPaths, JSONObject result) throws JSONException, ExecutionException, InterruptedException {
+        List<QualifiedValue> tagValues = context.getTagManager().readAsync(tagPaths).get();
+        setTagValue(tagPaths, tagValues, result);
+    }
+
+    private void tagWrite(GatewayContext context, final List<TagPath> tagPaths, final List<Object> writeValues, JSONObject result) throws JSONException, ExecutionException, InterruptedException {
+        List<QualityCode> writeResult = context.getTagManager().writeAsync(tagPaths, writeValues).get();
+        if (tagPaths.size() == 1) {
+            TagPath tagPath = tagPaths.get(0);
+            QualityCode quality = writeResult.get(0);
+            result.put("tagPath", tagPath.toStringFull());
+            result.put("value", writeValues.get(0));
+            setQuality(result, quality);
+        } else {
+            JSONArray resultValues = new JSONArray();
+            for (int i = 0; i < tagPaths.size(); i++) {
+                JSONObject tagObject = new JSONObject();
+                TagPath tagPath = tagPaths.get(i);
+                QualityCode quality = writeResult.get(i);
+                tagObject.put("tagPath", tagPath.toStringFull());
+                tagObject.put("value", writeValues.get(i));
+                setQuality(tagObject, quality);
+                resultValues.put(tagObject);
+            }
+            result.put("values", resultValues);
+        }
+    }
+
+    private String reqToJSON(HttpServletRequest req) throws IOException {
         StringBuilder sb = new StringBuilder();
         String line;
         BufferedReader reader = req.getReader();
@@ -222,31 +309,5 @@ public class NodeREDServlet extends HttpServlet {
     private GatewayContext getContext() {
         GatewayContext context = (GatewayContext) getServletContext().getAttribute(GatewayContext.SERVLET_CONTEXT_KEY);
         return context;
-    }
-
-    private class APITokenValidation {
-        private boolean success;
-        private String errorMessage;
-
-        public APITokenValidation(boolean success, String errorMessage) {
-            this.success = success;
-            this.errorMessage = errorMessage;
-        }
-
-        public boolean isSuccess() {
-            return success;
-        }
-
-        public void setSuccess(boolean success) {
-            this.success = success;
-        }
-
-        public String getErrorMessage() {
-            return errorMessage;
-        }
-
-        public void setErrorMessage(String errorMessage) {
-            this.errorMessage = errorMessage;
-        }
     }
 }
