@@ -4,7 +4,7 @@
 
 Node-RED nodes for interfacing to Ignition by Inductive Automation. Allows for the reading, writing, and browsing tags configured in Ignition.
 
-Requires [Node-RED Ignition Module](https://github.com/IgnitionModuleDevelopmentCommunity/IgnitionNode-RED/blob/master/Ignition-Node-RED-Module-signed.modl) and Ignition 8.1.0 or later.
+Requires [Node-RED Ignition Module](https://github.com/IgnitionModuleDevelopmentCommunity/IgnitionNode-RED/releases) and Ignition 8.1.0 or later.
 
 Use version 1.5.5 for Ignition 7.9 found [here](https://www.npmjs.com/package/node-red-contrib-ignition-nodes/v/1.5.5).
 
