@@ -31,3 +31,9 @@ August 15, 2021
  * Added support for reading/writing multiple tags
  * Compatible with Ignition 8.1
  * Compatible with Ignition Maker
+ 
+### 1.5.9
+
+August 20, 2021
+
+ * Added dependencies for ws, https-proxy-agent, and url

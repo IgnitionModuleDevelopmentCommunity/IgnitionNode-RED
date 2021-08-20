@@ -1,8 +1,12 @@
 {
   "name": "node-red-contrib-ignition-nodes",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "description": "Adds support for reading, writing, and browsing tags in Ignition",
-  "dependencies": {},
+  "dependencies": {
+	  "ws": "^7.5.3",
+	  "https-proxy-agent": "^5.0.0",
+	  "url": "^0.11.0"
+  },
   "keywords": [
     "node-red",
     "tag",
