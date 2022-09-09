@@ -190,13 +190,6 @@ var IgnitionNodesImpl = (function () {
                 "Content-Type": "application/json"
             }
         };
-		
-		if (this.serverConfig.ssl && this.serverConfig.tls) {
-			var tlsNode = RED.nodes.getNode(node.serverConfig.tls);
-			if (tlsNode) {
-				tlsNode.addTLSOptions(options);
-			}
-		}
 
         var requestType = this.serverConfig.ssl ? https : http;
         var nodeImpl = this;
