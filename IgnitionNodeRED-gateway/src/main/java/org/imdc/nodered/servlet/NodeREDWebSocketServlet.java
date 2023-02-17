@@ -8,7 +8,11 @@ import com.inductiveautomation.ignition.common.tags.paths.parser.TagPathParser;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
-import org.eclipse.jetty.websocket.servlet.*;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
+import org.eclipse.jetty.websocket.server.JettyWebSocketCreator;
+import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -16,19 +20,20 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class NodeREDWebSocketServlet extends WebSocketServlet {
+public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
     public static final String PATH = "node-red-ws";
     private static final int KB = 1024;
     private static final int MB = 1024 * KB;
 
     @Override
-    public void configure(WebSocketServletFactory factory) {
-        factory.getPolicy().setMaxTextMessageSize(2 * MB);
+    public void configure(JettyWebSocketServletFactory factory) {
+        factory.setMaxTextMessageSize(2 * MB);
         factory.register(NodeREDWebSocketChannel.class);
         factory.setCreator(new NodeREDWebSocketCreator(getContext()));
     }
@@ -38,7 +43,7 @@ public class NodeREDWebSocketServlet extends WebSocketServlet {
         return context;
     }
 
-    private static class NodeREDWebSocketCreator implements WebSocketCreator {
+    private static class NodeREDWebSocketCreator implements JettyWebSocketCreator {
         private final Logger logger = LoggerFactory.getLogger(getClass());
         private GatewayContext context;
 
@@ -46,7 +51,7 @@ public class NodeREDWebSocketServlet extends WebSocketServlet {
             this.context = context;
         }
 
-        private NodeREDWebSocketChannel error(ServletUpgradeResponse resp,
+        private NodeREDWebSocketChannel error(JettyServerUpgradeResponse resp,
                                               Logger logger,
                                               int errorCode,
                                               String errorMessage,
@@ -61,7 +66,7 @@ public class NodeREDWebSocketServlet extends WebSocketServlet {
         }
 
         @Override
-        public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
+        public Object createWebSocket(JettyServerUpgradeRequest req, JettyServerUpgradeResponse resp) {
             String requestPath = req.getRequestPath();
             if (!requestPath.startsWith("/system/" + PATH)) {
                 return error(resp, logger, HttpServletResponse.SC_NOT_FOUND, "Not Found", "Unable to send not-found response");
@@ -140,7 +145,12 @@ public class NodeREDWebSocketServlet extends WebSocketServlet {
         @OnWebSocketConnect
         public void onConnect(Session session) {
             try {
-                logger.trace("Connect: " + session.getRemoteAddress().getAddress());
+                if (logger.isTraceEnabled()) {
+                    logger.trace(String.format(
+                        "Connect: %s",
+                        ((InetSocketAddress) session.getRemoteAddress()).getAddress()
+                    ));
+                }
                 this.session = session;
             } catch (Throwable e) {
                 logger.error("Error onConnect", e);
