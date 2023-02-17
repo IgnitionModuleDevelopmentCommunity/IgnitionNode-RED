@@ -6,12 +6,12 @@
 
     <groupId>org.imdc.nodered</groupId>
     <artifactId>IgnitionNodeRED</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <packaging>pom</packaging>
 
     <properties>
-        <ignition-platform-version>8.1.0</ignition-platform-version>
-        <ignition-sdk-version>8.1.1</ignition-sdk-version>
+        <ignition-platform-version>8.1.25</ignition-platform-version>
+        <ignition-sdk-version>8.1.25</ignition-sdk-version>
         <module-name>Ignition Node-RED Module</module-name>
         <module-description>Adds support for Node-RED nodes</module-description>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
