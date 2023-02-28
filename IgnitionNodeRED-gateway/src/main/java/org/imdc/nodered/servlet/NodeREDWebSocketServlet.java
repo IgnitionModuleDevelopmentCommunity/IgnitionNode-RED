@@ -34,7 +34,6 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
     @Override
     public void configure(JettyWebSocketServletFactory factory) {
         factory.setMaxTextMessageSize(2 * MB);
-        factory.register(NodeREDWebSocketChannel.class);
         factory.setCreator(new NodeREDWebSocketCreator(getContext()));
     }
 

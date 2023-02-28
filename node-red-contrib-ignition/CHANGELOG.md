@@ -37,3 +37,9 @@ August 15, 2021
 August 20, 2021
 
  * Added dependencies for ws, https-proxy-agent, and url
+
+### 1.5.13
+
+February 27, 2023
+
+ * Version bump only for alignment with Ignition module and support for 8.1.25+
