@@ -1,16 +1,20 @@
 package org.imdc.nodered.servlet;
 
+import com.inductiveautomation.ignition.gateway.audit.AuditProfileRecord;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
 import org.imdc.nodered.NodeREDAPITokens;
 import simpleorm.dataset.SQuery;
 
 public class APITokenValidation {
     private boolean success;
-    private String errorMessage;
+    private String errorMessage, tokenName, token, auditProfileName;
 
-    public APITokenValidation(boolean success, String errorMessage) {
+    public APITokenValidation(boolean success, String errorMessage, String tokenName, String token, String auditProfileName) {
         this.success = success;
         this.errorMessage = errorMessage;
+        this.tokenName = tokenName;
+        this.token = token;
+        this.auditProfileName = auditProfileName;
     }
 
     public boolean isSuccess() {
@@ -29,6 +33,22 @@ public class APITokenValidation {
         this.errorMessage = errorMessage;
     }
 
+    public String getTokenName() {
+        return tokenName;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public String getAuditProfileName() {
+        return auditProfileName;
+    }
+
+    public boolean isAuditProfileDefined() {
+        return auditProfileName != null;
+    }
+
     public static APITokenValidation validateToken(GatewayContext context, String apiToken, String secret) {
         boolean success = true;
         String errorMessage = null;
@@ -40,15 +60,25 @@ public class APITokenValidation {
             success = false;
             errorMessage = "Invalid API token and secret";
         } else {
-            if (!r.getBoolean(NodeREDAPITokens.Enabled)) {
+            if (!r.isEnabled()) {
                 success = false;
                 errorMessage = "API token and secret is disabled";
-            } else if (!r.getString(NodeREDAPITokens.Secret).equals(secret)) {
+            } else if (!r.getSecret().equals(secret)) {
                 success = false;
                 errorMessage = "Invalid API token and secret";
             }
         }
 
-        return new APITokenValidation(success, errorMessage);
+        String auditProfileName = null;
+        if (r.getAuditProfileId() != null) {
+            SQuery<AuditProfileRecord> auditQuery = new SQuery<>(AuditProfileRecord.META);
+            auditQuery.eq(AuditProfileRecord.Id, r.getAuditProfileId());
+            AuditProfileRecord auditRecord = context.getPersistenceInterface().queryOne(auditQuery);
+            if (auditRecord != null) {
+                auditProfileName = auditRecord.getName();
+            }
+        }
+
+        return new APITokenValidation(success, errorMessage, r.getName(), r.getAPIToken(), auditProfileName);
     }
 }

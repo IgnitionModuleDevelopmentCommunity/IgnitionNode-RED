@@ -1,5 +1,6 @@
 package org.imdc.nodered;
 
+import com.inductiveautomation.ignition.gateway.audit.AuditProfileRecord;
 import com.inductiveautomation.ignition.gateway.localdb.persistence.*;
 import com.inductiveautomation.ignition.gateway.web.components.editors.PasswordEditorSource;
 import org.apache.commons.lang3.StringUtils;
@@ -37,6 +38,11 @@ public class NodeREDAPITokens extends PersistentRecord {
         }
     });
     public static final EncodedStringField Secret = new EncodedStringField(META, "Secret", SFieldFlags.SMANDATORY);
+
+    public static final LongField AuditProfileId = new LongField(META, "AuditProfileId");
+    public static final ReferenceField<AuditProfileRecord> AuditProfile =
+            new ReferenceField<AuditProfileRecord>(META, AuditProfileRecord.META, "AuditProfile", AuditProfileId);
+
     public static final BooleanField Enabled = new BooleanField(META, "Enabled").setDefault(true);
 
     static {
@@ -47,6 +53,8 @@ public class NodeREDAPITokens extends PersistentRecord {
         Secret.getFormMeta().setFieldNameKey("NodeRED.Secret.Name");
         Secret.getFormMeta().setFieldDescriptionKey("NodeRED.Secret.Desc");
         Secret.getFormMeta().setEditorSource(PasswordEditorSource.getSharedInstance());
+        AuditProfile.getFormMeta().setFieldNameKey("NodeRED.AuditProfile.Name");
+        AuditProfile.getFormMeta().setFieldDescriptionKey("NodeRED.AuditProfile.Desc");
         Enabled.getFormMeta().setFieldNameKey("NodeRED.Enabled.Name");
         Enabled.getFormMeta().setFieldDescriptionKey("NodeRED.Enabled.Desc");
     }
@@ -58,5 +66,25 @@ public class NodeREDAPITokens extends PersistentRecord {
 
     public Long getId() {
         return getLong(Id);
+    }
+
+    public Boolean isEnabled() {
+        return getBoolean(Enabled);
+    }
+
+    public String getName() {
+        return getString(Name);
+    }
+
+    public String getAPIToken() {
+        return getString(APIToken);
+    }
+
+    public String getSecret() {
+        return getString(NodeREDAPITokens.Secret);
+    }
+
+    public Long getAuditProfileId() {
+        return getLong(AuditProfileId);
     }
 }

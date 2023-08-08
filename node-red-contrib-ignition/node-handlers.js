@@ -95,7 +95,7 @@ var IgnitionNodesImpl = (function () {
 			var tagValues = [];
 			
 			if(!values){
-				var tagValue = msg.payload.tagValue ? msg.payload.tagValue : this.config.tagValue;
+				var tagValue = !(typeof msg.payload.tagValue === 'undefined' || msg.payload.tagValue === null) ? msg.payload.tagValue : this.config.tagValue;
 
 				if(typeof tagValue === 'undefined' || tagValue === null){
 					errorHandling.HandleResponse(RED, this.node, this.config, msg, result, 2, "Invalid tag value", "No tag value supplied");
