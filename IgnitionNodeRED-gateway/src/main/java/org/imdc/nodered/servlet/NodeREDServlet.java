@@ -6,7 +6,6 @@ import com.inductiveautomation.ignition.common.browsing.BrowseFilter;
 import com.inductiveautomation.ignition.common.browsing.Results;
 import com.inductiveautomation.ignition.common.model.values.QualifiedValue;
 import com.inductiveautomation.ignition.common.model.values.QualityCode;
-import com.inductiveautomation.ignition.common.script.builtin.DatasetUtilities;
 import com.inductiveautomation.ignition.common.tags.browsing.NodeDescription;
 import com.inductiveautomation.ignition.common.tags.model.TagPath;
 import com.inductiveautomation.ignition.common.tags.paths.parser.TagPathParser;
@@ -144,12 +143,13 @@ public class NodeREDServlet extends HttpServlet {
                             } else if (command.equals("tagWrite")) {
                                 List<Object> values = new ArrayList<>();
                                 if (input.has("value")) {
-                                    values.add(input.get("value"));
+                                    Object value = input.get("value");
+                                    values.add(checkJSONObject(logger, value));
                                 } else {
                                     JSONArray valuesArray = input.getJSONArray("values");
                                     for (int i = 0; i < valuesArray.length(); i++) {
                                         Object value = valuesArray.get(i);
-                                        values.add(value);
+                                        values.add(checkJSONObject(logger, value));
                                     }
                                 }
 
@@ -229,7 +229,22 @@ public class NodeREDServlet extends HttpServlet {
 
     public static Object checkObject(Object value) {
         if (value instanceof Dataset) {
-            return DatasetUtilities.toJSONObject((Dataset) value);
+            return TypeUtilities.datasetToJSON((Dataset) value);
+        }
+
+        return value;
+    }
+
+    public static Object checkJSONObject(Logger logger, Object value) {
+        if (value instanceof JSONObject) {
+            JSONObject jsonObj = (JSONObject) value;
+            if (jsonObj.has("columns") && jsonObj.has("rows")) {
+                try {
+                    return TypeUtilities.datasetFromJSON(jsonObj);
+                } catch (Throwable t) {
+                    logger.error("Error converting JSON object to Dataset", t);
+                }
+            }
         }
 
         return value;
@@ -294,7 +309,7 @@ public class NodeREDServlet extends HttpServlet {
             QualityCode quality = writeResult.get(0);
             Object value = writeValues.get(0);
             result.put("tagPath", tagPath.toStringFull());
-            result.put("value", value);
+            result.put("value", checkObject(value));
             setQuality(result, quality);
             audit(context, ipAddress, validation, tagPath, value, quality);
         } else {
@@ -305,7 +320,7 @@ public class NodeREDServlet extends HttpServlet {
                 QualityCode quality = writeResult.get(i);
                 Object value = writeValues.get(i);
                 tagObject.put("tagPath", tagPath.toStringFull());
-                tagObject.put("value", value);
+                tagObject.put("value", checkObject(value));
                 setQuality(tagObject, quality);
                 resultValues.put(tagObject);
                 audit(context, ipAddress, validation, tagPath, value, quality);

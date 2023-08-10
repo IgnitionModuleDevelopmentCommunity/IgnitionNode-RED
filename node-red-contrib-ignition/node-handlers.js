@@ -44,7 +44,7 @@ var IgnitionNodesImpl = (function () {
     }
 
     IgnitionNodesImpl.prototype.addMsg = function (msg) {
-        var result = { ignitionResult: { statusCode: 1, errorMessage:"" } };
+        var result = { ignitionResult: { } };
 
         if(!this.serverConfig){
             errorHandling.HandleResponse(RED, this.node, this.config, msg, result, 2, "Configuration error", "Configuration error");
@@ -153,7 +153,7 @@ var IgnitionNodesImpl = (function () {
 			var finalTagValues = [];
 			
 			function checkTagValueObjects(tp, tv, finalTagPaths, finalTagValues) {
-				if(tv != null && typeof tv == 'object'){						
+				if(tv != null && typeof tv == 'object' && !(tv.hasOwnProperty("columns") && tv.hasOwnProperty("rows"))){
 					for (const key in tv) {
 						var ktp = tp + "/" + key;
 						var ktv = tv[key];
@@ -312,7 +312,7 @@ var IgnitionWSNodesImpl = (function () {
     };
 	
 	IgnitionWSNodesImpl.prototype.handleEvent = function (id, socket, event, data, flags) {
-		var result = { ignitionResult: { statusCode: 1, errorMessage:"" } };
+		var result = { ignitionResult: { } };
         var statusCode = 1;
 		var nodeErrorMessage = "";
 		var errorMessage = "";

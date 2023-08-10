@@ -15,9 +15,6 @@
 */
 module.exports = {
     HandleResponse: function (RED, node, config, msg, result, statusCode, nodeErrorMessage, errorMessage){
-        result.statusCode = statusCode;
-        result.errorMessage = errorMessage;
-
         switch (config.valueType) {
             case "msg":
                 if(!config.value || config.value == ""){
@@ -28,7 +25,7 @@ module.exports = {
                 config.value = "payload";
         }
 
-        RED.util.setMessageProperty(msg, config.value, result, true);
+        RED.util.setMessageProperty(msg, config.value + ".ignitionResult", result.ignitionResult, true);
 
         if(statusCode > 1){
             node.status({ fill: "red", shape: "ring", text: nodeErrorMessage });
@@ -40,9 +37,6 @@ module.exports = {
     },
 
 	HandleWSResponse: function (RED, node, config, result, statusCode, nodeErrorMessage, errorMessage){
-        result.statusCode = statusCode;
-        result.errorMessage = errorMessage;
-		
         var msg;
 		if (node.wholemsg) {
 			msg = result;
