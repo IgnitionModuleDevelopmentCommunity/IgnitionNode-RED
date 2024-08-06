@@ -37,10 +37,6 @@ var IgnitionNodesImpl = (function () {
         if(!this.config.valueType){
             this.config.valueType = "msg.payload";
         }
-		
-		if(!this.serverConfig.defaultTagProvider || this.serverConfig.defaultTagProvider == ""){
-            this.serverConfig.defaultTagProvider = "edge";
-        }
     }
 
     IgnitionNodesImpl.prototype.addMsg = function (msg) {
@@ -57,8 +53,12 @@ var IgnitionNodesImpl = (function () {
 
         if(this.command == "tagRead" || this.command == "tagBrowse"){
 			var tagPath = msg.payload.tagPath ? msg.payload.tagPath : this.config.tagPath;
+			
+			if(!tagPath){
+				tagPath = "";
+			}
 
-			if(!tagPath || tagPath == ""){
+			if(this.command == "tagRead" && tagPath == ""){
 				errorHandling.HandleResponse(RED, this.node, this.config, msg, result, 2, "Invalid tag path", "No tag path supplied");
 				return;
 			}

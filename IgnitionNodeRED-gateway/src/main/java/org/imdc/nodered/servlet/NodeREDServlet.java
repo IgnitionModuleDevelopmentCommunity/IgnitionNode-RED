@@ -99,7 +99,7 @@ public class NodeREDServlet extends HttpServlet {
                 if (validation.isSuccess()) {
                     String command = input.getString("command");
                     if (command.equals("tagRead") || command.equals("tagWrite") || command.equals("tagBrowse")) {
-                        String defaultTagProvider = "default";
+                        String defaultTagProvider = null;
 
                         try {
                             defaultTagProvider = input.getString("defaultTagProvider");
@@ -107,7 +107,11 @@ public class NodeREDServlet extends HttpServlet {
                         }
 
                         if (defaultTagProvider == null || defaultTagProvider.equals("")) {
-                            defaultTagProvider = "default";
+                            if (command.equals("tagBrowse")) {
+                                defaultTagProvider = null;
+                            } else {
+                                defaultTagProvider = "default";
+                            }
                         }
 
                         List<TagPath> tagPaths = new ArrayList<>();
@@ -115,6 +119,7 @@ public class NodeREDServlet extends HttpServlet {
                         if (input.has("tagPath")) {
                             String tagPathStr = input.getString("tagPath");
                             TagPath tagPath = TagPathParser.parseSafe(defaultTagProvider, tagPathStr);
+
                             if (tagPath == null) {
                                 errorMessage = "Tag path '" + tagPathStr + "' is invalid";
                             }
@@ -124,6 +129,7 @@ public class NodeREDServlet extends HttpServlet {
                             for (int i = 0; i < tagPathsArray.length(); i++) {
                                 String tagPathStr = tagPathsArray.getString(i);
                                 TagPath tagPath = TagPathParser.parseSafe(defaultTagProvider, tagPathStr);
+
                                 if (tagPath == null) {
                                     errorMessage = "Tag path '" + tagPathStr + "' is invalid";
                                 }
@@ -176,6 +182,9 @@ public class NodeREDServlet extends HttpServlet {
                 logger.warn("Incorrect format for JSON POST data", ex);
                 errorMessage = "Incorrect format for JSON POST data: " + ex.getMessage();
             } catch (ExecutionException | InterruptedException ex) {
+                logger.warn("Error executing command", ex);
+                errorMessage = "Error executing command: " + ex.getMessage();
+            } catch (Exception ex) {
                 logger.warn("Error executing command", ex);
                 errorMessage = "Error executing command: " + ex.getMessage();
             }
@@ -258,29 +267,34 @@ public class NodeREDServlet extends HttpServlet {
         result.put("quality", quality);
     }
 
-    private JSONArray browseTags(GatewayContext context, TagPath tagPath) throws JSONException, ExecutionException, InterruptedException {
+    private JSONArray browseTags(GatewayContext context, TagPath tagPath) throws JSONException, ExecutionException, InterruptedException, Exception {
         JSONArray tagsArray = new JSONArray();
         Results<NodeDescription> browseResults = context.getTagManager().browseAsync(tagPath, BrowseFilter.NONE).get();
         Collection<NodeDescription> tagDescriptions = browseResults.getResults();
-        Iterator<NodeDescription> iterator = tagDescriptions.iterator();
-        while (iterator.hasNext()) {
-            NodeDescription tagDesc = iterator.next();
-            JSONObject tagObject = new JSONObject();
-            tagObject.put("tagPath", tagPath.toStringFull() + "/" + tagDesc.getName());
-            tagObject.put("name", tagDesc.getName());
-            tagObject.put("tagType", tagDesc.getObjectType().toString());
-            tagObject.put("dataType", tagDesc.getDataType().name());
-            tagObject.put("value", tagDesc.getCurrentValue().getValue());
-            setQuality(tagObject, tagDesc.getCurrentValue().getQuality());
-            tagObject.put("timestamp", DF.format(tagDesc.getCurrentValue().getTimestamp()));
-            tagsArray.put(tagObject);
+        if (tagDescriptions != null) {
+            Iterator<NodeDescription> iterator = tagDescriptions.iterator();
+            while (iterator.hasNext()) {
+                NodeDescription tagDesc = iterator.next();
+                JSONObject tagObject = new JSONObject();
+                tagObject.put("tagPath", tagPath.toStringFull() + "/" + tagDesc.getName());
+                tagObject.put("name", tagDesc.getName());
+                tagObject.put("tagType", tagDesc.getObjectType().toString());
+                tagObject.put("dataType", tagDesc.getDataType().name());
+                tagObject.put("value", tagDesc.getCurrentValue().getValue());
+                setQuality(tagObject, tagDesc.getCurrentValue().getQuality());
+                tagObject.put("timestamp", DF.format(tagDesc.getCurrentValue().getTimestamp()));
+                tagsArray.put(tagObject);
+            }
+        } else {
+            throw new Exception("Tag path '" + tagPath.toStringFull() + "' doesn't exist");
         }
 
         return tagsArray;
     }
 
-    private void tagBrowse(GatewayContext context, final List<TagPath> tagPaths, JSONObject result) throws JSONException, ExecutionException, InterruptedException {
+    private void tagBrowse(GatewayContext context, final List<TagPath> tagPaths, JSONObject result) throws JSONException, ExecutionException, InterruptedException, Exception {
         if (tagPaths.size() == 1) {
+            logger.info("Browsing " + tagPaths.get(0).toStringFull());
             result.put("tagPath", tagPaths.get(0).toStringFull());
             result.put("tags", browseTags(context, tagPaths.get(0)));
         } else {
