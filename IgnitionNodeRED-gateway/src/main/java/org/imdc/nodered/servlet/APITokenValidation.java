@@ -7,14 +7,17 @@ import simpleorm.dataset.SQuery;
 
 public class APITokenValidation {
     private boolean success;
-    private String errorMessage, tokenName, token, auditProfileName;
+    private String errorMessage, tokenName, token, auditProfileName, securityLevels, roles, zones;
 
-    public APITokenValidation(boolean success, String errorMessage, String tokenName, String token, String auditProfileName) {
+    public APITokenValidation(boolean success, String errorMessage, String tokenName, String token, String auditProfileName, String securityLevels, String roles, String zones) {
         this.success = success;
         this.errorMessage = errorMessage;
         this.tokenName = tokenName;
         this.token = token;
         this.auditProfileName = auditProfileName;
+        this.securityLevels = securityLevels;
+        this.roles = roles;
+        this.zones = zones;
     }
 
     public boolean isSuccess() {
@@ -49,6 +52,18 @@ public class APITokenValidation {
         return auditProfileName != null;
     }
 
+    public String getSecurityLevels() {
+        return securityLevels;
+    }
+
+    public String getRoles() {
+        return roles;
+    }
+
+    public String getZones() {
+        return zones;
+    }
+
     public static APITokenValidation validateToken(GatewayContext context, String apiToken, String secret) {
         boolean success = true;
         String errorMessage = null;
@@ -79,6 +94,6 @@ public class APITokenValidation {
             }
         }
 
-        return new APITokenValidation(success, errorMessage, r.getName(), r.getAPIToken(), auditProfileName);
+        return new APITokenValidation(success, errorMessage, r.getName(), r.getAPIToken(), auditProfileName, r.getSecurityLevels(), r.getRoles(), r.getZones());
     }
 }

@@ -1,12 +1,16 @@
 package org.imdc.nodered.servlet;
 
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSet;
 import com.inductiveautomation.ignition.common.Dataset;
 import com.inductiveautomation.ignition.common.TypeUtilities;
+import com.inductiveautomation.ignition.common.auth.security.level.SecurityLevelConfig;
 import com.inductiveautomation.ignition.common.browsing.BrowseFilter;
 import com.inductiveautomation.ignition.common.browsing.Results;
 import com.inductiveautomation.ignition.common.model.values.QualifiedValue;
 import com.inductiveautomation.ignition.common.model.values.QualityCode;
 import com.inductiveautomation.ignition.common.tags.browsing.NodeDescription;
+import com.inductiveautomation.ignition.common.tags.model.SecurityContext;
 import com.inductiveautomation.ignition.common.tags.model.TagPath;
 import com.inductiveautomation.ignition.common.tags.paths.parser.TagPathParser;
 import com.inductiveautomation.ignition.common.util.AuditStatus;
@@ -95,6 +99,7 @@ public class NodeREDServlet extends HttpServlet {
                 String apiToken = input.getString("apiToken");
                 String secret = input.getString("secret");
                 APITokenValidation validation = APITokenValidation.validateToken(context, apiToken, secret);
+                SecurityContext securityContext = getSecurityContext(validation);
 
                 if (validation.isSuccess()) {
                     String command = input.getString("command");
@@ -143,9 +148,9 @@ public class NodeREDServlet extends HttpServlet {
 
                         if (errorMessage == null) {
                             if (command.equals("tagRead")) {
-                                tagRead(context, tagPaths, result);
+                                tagRead(context, tagPaths, securityContext, result);
                             } else if (command.equals("tagBrowse")) {
-                                tagBrowse(context, tagPaths, result);
+                                tagBrowse(context, tagPaths, securityContext, result);
                             } else if (command.equals("tagWrite")) {
                                 List<Object> values = new ArrayList<>();
                                 if (input.has("value")) {
@@ -168,7 +173,7 @@ public class NodeREDServlet extends HttpServlet {
                                 if (values.size() != tagPaths.size()) {
                                     errorMessage = "Number of tag paths (" + tagPaths.size() + ") does not match values (" + values.size() + ")";
                                 } else {
-                                    tagWrite(context, tagPaths, values, result, ipAddress, validation);
+                                    tagWrite(context, tagPaths, values, securityContext, result, ipAddress, validation);
                                 }
                             }
                         }
@@ -212,6 +217,28 @@ public class NodeREDServlet extends HttpServlet {
             logger.warn("Error writing JSON response", ex);
             resp.sendError(500, ex.getMessage());
         }
+    }
+
+    private SecurityContext getSecurityContext(APITokenValidation validation) {
+        if (validation.getSecurityLevels() != null && !validation.getSecurityLevels().isBlank()) {
+            String[][] paths = Arrays.stream(validation.getSecurityLevels().split(",")).map(r -> Arrays.stream(r.trim().split("/")).toArray(String[]::new)).toArray(String[][]::new);
+            return SecurityContext.fromSecurityLevels(SecurityLevelConfig.fromPaths(paths));
+        } else if ((validation.getRoles() != null && !validation.getRoles().isBlank()) || (validation.getZones() != null && !validation.getZones().isBlank())) {
+            ImmutableCollection<String> roles = ImmutableSet.of();
+            ImmutableCollection<String> zones = ImmutableSet.of();
+
+            if (validation.getRoles() != null && !validation.getRoles().isBlank()) {
+                roles = ImmutableSet.copyOf(Arrays.stream(validation.getRoles().split(",")).map(String::trim).toArray(String[]::new));
+            }
+
+            if (validation.getZones() != null && !validation.getZones().isBlank()) {
+                zones = ImmutableSet.copyOf(Arrays.stream(validation.getZones().split(",")).map(String::trim).toArray(String[]::new));
+            }
+
+            return SecurityContext.fromRolesAndZones(roles, zones);
+        }
+
+        return SecurityContext.emptyContext();
     }
 
     public static void setTagValue(List<TagPath> tagPaths, List<QualifiedValue> tagValues, JSONObject result) throws JSONException {
@@ -267,9 +294,9 @@ public class NodeREDServlet extends HttpServlet {
         result.put("quality", quality);
     }
 
-    private JSONArray browseTags(GatewayContext context, TagPath tagPath) throws JSONException, ExecutionException, InterruptedException, Exception {
+    private JSONArray browseTags(GatewayContext context, TagPath tagPath, SecurityContext securityContext) throws JSONException, ExecutionException, InterruptedException, Exception {
         JSONArray tagsArray = new JSONArray();
-        Results<NodeDescription> browseResults = context.getTagManager().browseAsync(tagPath, BrowseFilter.NONE).get();
+        Results<NodeDescription> browseResults = context.getTagManager().browseAsync(tagPath, BrowseFilter.NONE, securityContext).get();
         Collection<NodeDescription> tagDescriptions = browseResults.getResults();
         if (tagDescriptions != null) {
             Iterator<NodeDescription> iterator = tagDescriptions.iterator();
@@ -292,31 +319,31 @@ public class NodeREDServlet extends HttpServlet {
         return tagsArray;
     }
 
-    private void tagBrowse(GatewayContext context, final List<TagPath> tagPaths, JSONObject result) throws JSONException, ExecutionException, InterruptedException, Exception {
+    private void tagBrowse(GatewayContext context, final List<TagPath> tagPaths, SecurityContext securityContext, JSONObject result) throws JSONException, ExecutionException, InterruptedException, Exception {
         if (tagPaths.size() == 1) {
             logger.info("Browsing " + tagPaths.get(0).toStringFull());
             result.put("tagPath", tagPaths.get(0).toStringFull());
-            result.put("tags", browseTags(context, tagPaths.get(0)));
+            result.put("tags", browseTags(context, tagPaths.get(0), securityContext));
         } else {
             JSONArray resultValues = new JSONArray();
             for (int i = 0; i < tagPaths.size(); i++) {
                 JSONObject tagObject = new JSONObject();
                 TagPath tagPath = tagPaths.get(i);
                 tagObject.put("tagPath", tagPath.toStringFull());
-                tagObject.put("tags", browseTags(context, tagPath));
+                tagObject.put("tags", browseTags(context, tagPath, securityContext));
                 resultValues.put(tagObject);
             }
             result.put("values", resultValues);
         }
     }
 
-    private void tagRead(GatewayContext context, final List<TagPath> tagPaths, JSONObject result) throws JSONException, ExecutionException, InterruptedException {
-        List<QualifiedValue> tagValues = context.getTagManager().readAsync(tagPaths).get();
+    private void tagRead(GatewayContext context, final List<TagPath> tagPaths, SecurityContext securityContext, JSONObject result) throws JSONException, ExecutionException, InterruptedException {
+        List<QualifiedValue> tagValues = context.getTagManager().readAsync(tagPaths, securityContext).get();
         setTagValue(tagPaths, tagValues, result);
     }
 
-    private void tagWrite(GatewayContext context, final List<TagPath> tagPaths, final List<Object> writeValues, JSONObject result, String ipAddress, APITokenValidation validation) throws JSONException, ExecutionException, InterruptedException {
-        List<QualityCode> writeResult = context.getTagManager().writeAsync(tagPaths, writeValues).get();
+    private void tagWrite(GatewayContext context, final List<TagPath> tagPaths, final List<Object> writeValues, SecurityContext securityContext, JSONObject result, String ipAddress, APITokenValidation validation) throws JSONException, ExecutionException, InterruptedException {
+        List<QualityCode> writeResult = context.getTagManager().writeAsync(tagPaths, writeValues, securityContext).get();
 
         if (tagPaths.size() == 1) {
             TagPath tagPath = tagPaths.get(0);

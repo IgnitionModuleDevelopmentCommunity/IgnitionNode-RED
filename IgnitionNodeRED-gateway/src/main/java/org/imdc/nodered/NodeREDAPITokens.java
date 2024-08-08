@@ -43,7 +43,54 @@ public class NodeREDAPITokens extends PersistentRecord {
     public static final ReferenceField<AuditProfileRecord> AuditProfile =
             new ReferenceField<AuditProfileRecord>(META, AuditProfileRecord.META, "AuditProfile", AuditProfileId);
 
+    public static final StringField SecurityLevels = new StringField(META, "SecurityLevels").addValidator(new SValidatorI() {
+        @Override
+        public void onValidate(SFieldMeta field, SRecordInstance instance) throws SException.Validation {
+            if (!instance.isNull(field)) {
+                String val = instance.getString(field);
+
+                try {
+                    val.split(",");
+                } catch (Throwable ex) {
+                    throw new SException.Validation("Field " + field + " value must be a comma separated string");
+                }
+            }
+        }
+    });
+    public static final StringField Roles = new StringField(META, "Roles").addValidator(new SValidatorI() {
+        @Override
+        public void onValidate(SFieldMeta field, SRecordInstance instance) throws SException.Validation {
+            if (!instance.isNull(field)) {
+                String val = instance.getString(field);
+
+                try {
+                    val.split(",");
+                } catch (Throwable ex) {
+                    throw new SException.Validation("Field " + field + " value must be a comma separated string");
+                }
+            }
+        }
+    });
+    public static final StringField Zones = new StringField(META, "Zones").addValidator(new SValidatorI() {
+        @Override
+        public void onValidate(SFieldMeta field, SRecordInstance instance) throws SException.Validation {
+            if (!instance.isNull(field)) {
+                String val = instance.getString(field);
+
+                try {
+                    val.split(",");
+                } catch (Throwable ex) {
+                    throw new SException.Validation("Field " + field + " value must be a comma separated string");
+                }
+            }
+        }
+    });
+
     public static final BooleanField Enabled = new BooleanField(META, "Enabled").setDefault(true);
+
+    public static final Category SettingsCategory = new Category("NodeRED.Settings", 125).include(Name, APIToken, Secret, AuditProfile, Enabled);
+
+    public static final Category ImpersonateCategory = new Category("NodeRED.Impersonate", 126).include(SecurityLevels, Roles, Zones);
 
     static {
         Name.getFormMeta().setFieldNameKey("NodeRED.Name.Name");
@@ -55,6 +102,12 @@ public class NodeREDAPITokens extends PersistentRecord {
         Secret.getFormMeta().setEditorSource(PasswordEditorSource.getSharedInstance());
         AuditProfile.getFormMeta().setFieldNameKey("NodeRED.AuditProfile.Name");
         AuditProfile.getFormMeta().setFieldDescriptionKey("NodeRED.AuditProfile.Desc");
+        SecurityLevels.getFormMeta().setFieldNameKey("NodeRED.SecurityLevels.Name");
+        SecurityLevels.getFormMeta().setFieldDescriptionKey("NodeRED.SecurityLevels.Desc");
+        Roles.getFormMeta().setFieldNameKey("NodeRED.Roles.Name");
+        Roles.getFormMeta().setFieldDescriptionKey("NodeRED.Roles.Desc");
+        Zones.getFormMeta().setFieldNameKey("NodeRED.Zones.Name");
+        Zones.getFormMeta().setFieldDescriptionKey("NodeRED.Zones.Desc");
         Enabled.getFormMeta().setFieldNameKey("NodeRED.Enabled.Name");
         Enabled.getFormMeta().setFieldDescriptionKey("NodeRED.Enabled.Desc");
     }
@@ -86,5 +139,17 @@ public class NodeREDAPITokens extends PersistentRecord {
 
     public Long getAuditProfileId() {
         return getLong(AuditProfileId);
+    }
+
+    public String getSecurityLevels() {
+        return getString(SecurityLevels);
+    }
+
+    public String getRoles() {
+        return getString(Roles);
+    }
+
+    public String getZones() {
+        return getString(Zones);
     }
 }
