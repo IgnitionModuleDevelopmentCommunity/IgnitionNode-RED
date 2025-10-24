@@ -153,7 +153,7 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
                     ));
                 }
                 this.session = session;
-                this.pingFuture = context.getExecutionManager().scheduleWithFixedDelay(this, 30, 30, TimeUnit.SECONDS);
+                this.pingFuture = context.getExecutionManager().scheduleWithFixedDelay(this, 10, 10, TimeUnit.SECONDS);
             } catch (Throwable e) {
                 logger.error("Error onConnect", e);
             }
