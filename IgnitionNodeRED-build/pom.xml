@@ -47,7 +47,7 @@
                     <moduleId>org.imdc.nodered.IgnitionNodeRED</moduleId>
                     <moduleName>${module-name}</moduleName>
                     <moduleDescription>${module-description}</moduleDescription>
-                    <moduleVersion>1.5.17.${timestamp}</moduleVersion>
+                    <moduleVersion>1.5.18.${timestamp}</moduleVersion>
                     <requiredIgnitionVersion>${ignition-platform-version}</requiredIgnitionVersion>
                     <requiredFrameworkVersion>8</requiredFrameworkVersion>
                     <licenseFile>license.html</licenseFile>

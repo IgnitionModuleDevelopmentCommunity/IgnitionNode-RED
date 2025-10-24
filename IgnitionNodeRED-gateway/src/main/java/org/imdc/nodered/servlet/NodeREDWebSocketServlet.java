@@ -6,13 +6,9 @@ import com.inductiveautomation.ignition.common.tags.model.event.TagChangeEvent;
 import com.inductiveautomation.ignition.common.tags.model.event.TagChangeListener;
 import com.inductiveautomation.ignition.common.tags.paths.parser.TagPathParser;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.*;
-import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
-import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
-import org.eclipse.jetty.websocket.server.JettyWebSocketCreator;
-import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
-import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
+import org.eclipse.jetty.ee8.websocket.api.Session;
+import org.eclipse.jetty.ee8.websocket.api.annotations.*;
+import org.eclipse.jetty.ee8.websocket.server.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -21,9 +17,12 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
@@ -76,12 +75,13 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
     }
 
     @WebSocket
-    public static class NodeREDWebSocketChannel implements TagChangeListener {
+    public static class NodeREDWebSocketChannel implements TagChangeListener, Runnable {
         private final Logger logger = LoggerFactory.getLogger(getClass());
         private GatewayContext context;
         private Session session;
         private String defaultTagProvider;
         private List<TagPath> tagPaths;
+        private ScheduledFuture pingFuture;
 
         public NodeREDWebSocketChannel(GatewayContext context) {
             this.context = context;
@@ -126,6 +126,7 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
             try {
                 logger.warn("Close: " + reason);
                 unsubscribe();
+                this.pingFuture.cancel(true);
             } catch (Throwable e) {
                 logger.error("Error onClose", e);
             }
@@ -136,6 +137,7 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
             try {
                 logger.warn("Web socket error", t);
                 unsubscribe();
+                this.pingFuture.cancel(true);
             } catch (Throwable e) {
                 logger.error("Error onError", e);
             }
@@ -151,6 +153,7 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
                     ));
                 }
                 this.session = session;
+                this.pingFuture = context.getExecutionManager().scheduleWithFixedDelay(this, 30, 30, TimeUnit.SECONDS);
             } catch (Throwable e) {
                 logger.error("Error onConnect", e);
             }
@@ -208,6 +211,15 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
                 session.getRemote().sendString(ret.toString());
             } catch (Throwable e) {
                 logger.error("Error sending tag value", e);
+            }
+        }
+
+        @Override
+        public void run() {
+            try {
+                session.getRemote().sendPing(ByteBuffer.allocate(0));
+            } catch(Throwable t){
+                logger.error("Error sending websocket ping", t);
             }
         }
     }
