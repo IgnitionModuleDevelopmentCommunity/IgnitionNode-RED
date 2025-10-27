@@ -2,7 +2,6 @@ package org.imdc.nodered;
 
 import com.inductiveautomation.ignition.gateway.audit.AuditProfileRecord;
 import com.inductiveautomation.ignition.gateway.localdb.persistence.*;
-import com.inductiveautomation.ignition.gateway.web.components.editors.PasswordEditorSource;
 import org.apache.commons.lang3.StringUtils;
 import simpleorm.dataset.SFieldFlags;
 import simpleorm.dataset.SFieldMeta;
@@ -87,30 +86,6 @@ public class NodeREDAPITokens extends PersistentRecord {
     });
 
     public static final BooleanField Enabled = new BooleanField(META, "Enabled").setDefault(true);
-
-    public static final Category SettingsCategory = new Category("NodeRED.Settings", 125).include(Name, APIToken, Secret, AuditProfile, Enabled);
-
-    public static final Category ImpersonateCategory = new Category("NodeRED.Impersonate", 126).include(SecurityLevels, Roles, Zones);
-
-    static {
-        Name.getFormMeta().setFieldNameKey("NodeRED.Name.Name");
-        Name.getFormMeta().setFieldDescriptionKey("NodeRED.Name.Desc");
-        APIToken.getFormMeta().setFieldNameKey("NodeRED.APIToken.Name");
-        APIToken.getFormMeta().setFieldDescriptionKey("NodeRED.APIToken.Desc");
-        Secret.getFormMeta().setFieldNameKey("NodeRED.Secret.Name");
-        Secret.getFormMeta().setFieldDescriptionKey("NodeRED.Secret.Desc");
-        Secret.getFormMeta().setEditorSource(PasswordEditorSource.getSharedInstance());
-        AuditProfile.getFormMeta().setFieldNameKey("NodeRED.AuditProfile.Name");
-        AuditProfile.getFormMeta().setFieldDescriptionKey("NodeRED.AuditProfile.Desc");
-        SecurityLevels.getFormMeta().setFieldNameKey("NodeRED.SecurityLevels.Name");
-        SecurityLevels.getFormMeta().setFieldDescriptionKey("NodeRED.SecurityLevels.Desc");
-        Roles.getFormMeta().setFieldNameKey("NodeRED.Roles.Name");
-        Roles.getFormMeta().setFieldDescriptionKey("NodeRED.Roles.Desc");
-        Zones.getFormMeta().setFieldNameKey("NodeRED.Zones.Name");
-        Zones.getFormMeta().setFieldDescriptionKey("NodeRED.Zones.Desc");
-        Enabled.getFormMeta().setFieldNameKey("NodeRED.Enabled.Name");
-        Enabled.getFormMeta().setFieldDescriptionKey("NodeRED.Enabled.Desc");
-    }
 
     @Override
     public RecordMeta<?> getMeta() {

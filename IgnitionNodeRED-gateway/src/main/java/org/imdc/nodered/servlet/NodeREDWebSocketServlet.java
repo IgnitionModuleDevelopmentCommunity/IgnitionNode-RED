@@ -6,15 +6,16 @@ import com.inductiveautomation.ignition.common.tags.model.event.TagChangeEvent;
 import com.inductiveautomation.ignition.common.tags.model.event.TagChangeListener;
 import com.inductiveautomation.ignition.common.tags.paths.parser.TagPathParser;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
-import org.eclipse.jetty.ee8.websocket.api.Session;
-import org.eclipse.jetty.ee8.websocket.api.annotations.*;
-import org.eclipse.jetty.ee8.websocket.server.*;
+import jakarta.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.ee10.websocket.server.*;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.annotations.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -115,7 +116,7 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
                 JSONObject ret = new JSONObject();
                 ret.put("statusCode", 0);
                 ret.put("errorMessage", errorMessage);
-                session.getRemote().sendString(ret.toString());
+                session.sendText(ret.toString(), new Callback.Completable());
             } catch (Throwable t) {
                 logger.warn("Unable to send result", t);
             }
@@ -143,13 +144,13 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
             }
         }
 
-        @OnWebSocketConnect
-        public void onConnect(Session session) {
+        @OnWebSocketOpen
+        public void onOpen(Session session) {
             try {
                 if (logger.isTraceEnabled()) {
                     logger.trace(String.format(
                         "Connect: %s",
-                        ((InetSocketAddress) session.getRemoteAddress()).getAddress()
+                        ((InetSocketAddress) session.getRemoteSocketAddress()).getAddress()
                     ));
                 }
                 this.session = session;
@@ -208,7 +209,7 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
                 ret.put("ignitionResult", result);
                 ret.put("statusCode", 1);
                 ret.put("errorMessage", "");
-                session.getRemote().sendString(ret.toString());
+                session.sendText(ret.toString(), new Callback.Completable());
             } catch (Throwable e) {
                 logger.error("Error sending tag value", e);
             }
@@ -217,7 +218,7 @@ public class NodeREDWebSocketServlet extends JettyWebSocketServlet {
         @Override
         public void run() {
             try {
-                session.getRemote().sendPing(ByteBuffer.allocate(0));
+                session.sendPing(ByteBuffer.allocate(0), new Callback.Completable());
             } catch(Throwable t){
                 logger.error("Error sending websocket ping", t);
             }

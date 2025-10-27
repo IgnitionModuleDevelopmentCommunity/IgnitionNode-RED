@@ -4,9 +4,11 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.inductiveautomation.ignition.common.Dataset;
 import com.inductiveautomation.ignition.common.TypeUtilities;
+import com.inductiveautomation.ignition.common.audit.AuditRecord;
 import com.inductiveautomation.ignition.common.auth.security.level.SecurityLevelConfig;
 import com.inductiveautomation.ignition.common.browsing.BrowseFilter;
 import com.inductiveautomation.ignition.common.browsing.Results;
+import com.inductiveautomation.ignition.common.model.ApplicationScope;
 import com.inductiveautomation.ignition.common.model.values.QualifiedValue;
 import com.inductiveautomation.ignition.common.model.values.QualityCode;
 import com.inductiveautomation.ignition.common.tags.browsing.NodeDescription;
@@ -16,18 +18,17 @@ import com.inductiveautomation.ignition.common.tags.paths.parser.TagPathParser;
 import com.inductiveautomation.ignition.common.util.AuditStatus;
 import com.inductiveautomation.ignition.gateway.audit.AuditContext;
 import com.inductiveautomation.ignition.gateway.audit.AuditProfile;
-import com.inductiveautomation.ignition.gateway.audit.AuditRecord;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -374,7 +375,7 @@ public class NodeREDServlet extends HttpServlet {
         if (validation.isAuditProfileDefined()) {
             try {
                 AuditProfile auditProfile = context.getAuditManager().getProfile(validation.getAuditProfileName());
-                AuditContext auditContext = context.getAuditManager().getAuditContext().orElseGet(AuditContext.UNKNOWN);
+                AuditContext auditContext = context.getAuditManager().getAuditContext().orElseGet(AuditContext.unknown(ApplicationScope.GATEWAY));
                 String qualifiedPath = auditContext.getPath().extend("NodeRED", validation.getTokenName()).toString();
                 AuditRecord auditRecord = auditContext.toRecordBuilder().setAction("tag write").setActionTarget(tagPath.toStringFull()).setActionValue(TypeUtilities.toString(writeValue)).setTimestamp(new Date()).setActor(validation.getToken()).setActorHost(ipAddress).setOriginatingSystem(qualifiedPath).setStatusCode(writeResult.isGood() ? AuditStatus.GOOD.getRawValue() : AuditStatus.BAD.getRawValue()).build();
                 auditProfile.audit(auditRecord);

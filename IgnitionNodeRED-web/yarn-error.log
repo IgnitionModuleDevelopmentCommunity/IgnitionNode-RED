@@ -1,0 +1,106 @@
+Arguments: 
+  /Users/travis/Development/GitHub/IgnitionNode-RED/IgnitionNodeRED-web/.gradle/nodejs/node-v18.20.8-darwin-arm64/bin/node /Users/travis/Development/GitHub/IgnitionNode-RED/IgnitionNodeRED-web/.gradle/yarn/yarn-v1.22.18/bin/yarn
+
+PATH: 
+  /Users/travis/Development/GitHub/IgnitionNode-RED/IgnitionNodeRED-web/.gradle/yarn/yarn-v1.22.18/bin:/Users/travis/Development/GitHub/IgnitionNode-RED/IgnitionNodeRED-web/.gradle/npm/npm-v8.5.5/bin:/Users/travis/Development/GitHub/IgnitionNode-RED/IgnitionNodeRED-web/.gradle/nodejs/node-v18.20.8-darwin-arm64/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Users/travis/.lmstudio/bin
+
+Yarn version: 
+  1.22.18
+
+Node version: 
+  18.20.8
+
+Platform: 
+  darwin arm64
+
+Trace: 
+  Error: https://registry.yarnpkg.com/@inductiveautomation%2fignition-icons: Not found
+      at params.callback [as _callback] (/Users/travis/Development/GitHub/IgnitionNode-RED/IgnitionNodeRED-web/.gradle/yarn/yarn-v1.22.18/lib/node_modules/yarn/lib/cli.js:66138:18)
+      at self.callback (/Users/travis/Development/GitHub/IgnitionNode-RED/IgnitionNodeRED-web/.gradle/yarn/yarn-v1.22.18/lib/node_modules/yarn/lib/cli.js:140883:22)
+      at Request.emit (node:events:517:28)
+      at Request.<anonymous> (/Users/travis/Development/GitHub/IgnitionNode-RED/IgnitionNodeRED-web/.gradle/yarn/yarn-v1.22.18/lib/node_modules/yarn/lib/cli.js:141855:10)
+      at Request.emit (node:events:517:28)
+      at IncomingMessage.<anonymous> (/Users/travis/Development/GitHub/IgnitionNode-RED/IgnitionNodeRED-web/.gradle/yarn/yarn-v1.22.18/lib/node_modules/yarn/lib/cli.js:141777:12)
+      at Object.onceWrapper (node:events:631:28)
+      at IncomingMessage.emit (node:events:529:35)
+      at endReadableNT (node:internal/streams/readable:1400:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+
+npm manifest: 
+  {
+      "name": "IgnitionNodeRED",
+      "version": "1.0.0",
+      "description": "",
+      "main": "build/dist/index.js",
+      "license": "UNLICENSED",
+      "scripts": {
+          "build": "yarn run build:dev",
+          "build:dev": "yarn run build-dev",
+          "build-dev": "webpack --mode development",
+          "build:prod": "yarn run build-prod",
+          "build-prod": "rimraf build/dist && webpack --mode production",
+          "build:dev-verbose": "webpack --mode development --progress --profile --colors",
+          "build:prod-verbose": "webpack --mode production --progress --profile --colors",
+          "run:dev": "webpack serve --env isStandalone",
+          "clean": "rimraf build/dist",
+          "deepClean": "yarn run clean && rimraf node_modules",
+          "lint": "eslint ./src --ext .jsx,.js"
+      },
+      "dependencies": {
+          "@reduxjs/toolkit": "^1.9.3",
+          "react": "18.2.0",
+          "react-dom": "18.2.0",
+          "react-hook-form": "^7.44.3",
+          "react-redux": "^8.0.5",
+          "yaml": "^2.3.0",
+          "@inductiveautomation/ignition-icons": "^1.3.0-beta2",
+          "@inductiveautomation/ignition-web-ui": "^1.3.0-beta2"
+      },
+      "devDependencies": {
+          "@babel/core": "^7.17.8",
+          "@babel/eslint-parser": "^7.17.0",
+          "@babel/plugin-transform-runtime": "^7.22.7",
+          "@babel/preset-env": "^7.21.4",
+          "@babel/preset-react": "^7.18.6",
+          "@babel/preset-typescript": "^7.21.4",
+          "@babel/runtime": "^7.21.4",
+          "@types/react": "18.0.26",
+          "@types/react-dom": "18.0.10",
+          "@types/react-redux": "^7.1.25",
+          "@types/webpack-env": "^1.16.2",
+          "@typescript-eslint/eslint-plugin": "^5.60.1",
+          "@typescript-eslint/parser": "^5.60.1",
+          "babel-loader": "^8.3.0",
+          "babel-plugin-import": "^1.13.6",
+          "css-loader": "^6.7.1",
+          "eslint": "8.43.0",
+          "eslint-config-prettier": "^8.3.0",
+          "eslint-plugin-prettier": "^3.4.1",
+          "eslint-plugin-react": "7.29.4",
+          "eslint-plugin-react-hooks": "^4.4.0",
+          "eslint-webpack-plugin": "^4.0.1",
+          "html-webpack-plugin": "^5.5.3",
+          "fork-ts-checker-webpack-plugin": "8.0.0",
+          "path": "^0.12.7",
+          "prettier": "^2.3.2",
+          "rimraf": "^3.0.2",
+          "sass": "1.49.10",
+          "sass-loader": "^12.6.0",
+          "style-loader": "^3.3.1",
+          "ts-loader": "9.4.3",
+          "typescript": "4.9.5",
+          "webpack": "5.70.0",
+          "webpack-cli": "4.10.0",
+          "webpack-dev-server": "^4.11.1"
+      },
+      "resolutions": {
+          "@inductiveautomation/ignition-icons": "^1.3.0-beta2",
+          "@inductiveautomation/ignition-web-ui": "^1.3.0-beta2"
+      }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

@@ -6,15 +6,18 @@ Adds support for Node-RED nodes by adding an API to an Ignition Gateway. The API
 
 ## Configuration
 
-Once the module is installed, you must add an API Key and Secret that allow access to the API. You can administrate these tokens in the Ignition Gateway configuration page under Node-RED -> API Tokens.
+Once the module is installed, you must add an API Token and Secret that allow access to the API. You can administrate these tokens in the Ignition Gateway configuration page under Connections -> Node-RED -> Tokens.
 
 ## Requirements
 
-- Ignition 8.1.25+  (Select prior branch for 7.9 or use release 1.5.11 for versions prior to 8.1.25)
-- Node-RED (node-red-contrib-ignition) nodes installed
+- Ignition 8.1+ and the Node-RED module
+  - For Ignition 8.1.0 - 8.1.47, use version 1.5.17 or previous
+  - For Ignition 8.1.48, use version 1.5.18
+  - For Ignition 8.3.0+, use version 2.0.0
+- Node-RED (node-red-contrib-ignition) nodes installed at the same version as this module
 
 ## Copyright and License
 
-Copyright 2023 Ignition Module Development Community
+Copyright 2025 Ignition Module Development Community
 
 Licensed under the Apache 2.0 license.

@@ -3,3 +3,10 @@
 **/*.iml
 IgnitionNodeRED-build/target/*
 IgnitionNodeRED-gateway/target/*
+.gradle
+.idea
+build/
+IgnitionNodeRED-web/node_modules/
+IgnitionNodeRED-web/.gradle
+IgnitionNodeRED-web/build
+*.DS_Store

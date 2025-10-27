@@ -1,9 +1,15 @@
 package org.imdc.nodered.servlet;
 
-import com.inductiveautomation.ignition.gateway.audit.AuditProfileRecord;
+import com.inductiveautomation.ignition.common.resourcecollection.Resource;
+import com.inductiveautomation.ignition.gateway.config.DecodedResource;
+import com.inductiveautomation.ignition.gateway.config.ResourceCodec;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
-import org.imdc.nodered.NodeREDAPITokens;
-import simpleorm.dataset.SQuery;
+import org.imdc.nodered.GatewayHook;
+import org.imdc.nodered.NodeREDAPITokenResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public class APITokenValidation {
     private boolean success;
@@ -65,35 +71,45 @@ public class APITokenValidation {
     }
 
     public static APITokenValidation validateToken(GatewayContext context, String apiToken, String secret) {
+        Logger logger = LoggerFactory.getLogger(APITokenValidation.class);
+
         boolean success = true;
         String errorMessage = null;
 
-        SQuery<NodeREDAPITokens> query = new SQuery<>(NodeREDAPITokens.META);
-        query.eq(NodeREDAPITokens.APIToken, apiToken);
-        NodeREDAPITokens r = context.getPersistenceInterface().queryOne(query);
-        if (r == null) {
+        try {
+            List<Resource> tokenResources = context.getConfigurationManager().getResources(GatewayHook.TOKEN_RESOURCE_TYPE);
+            boolean found = false;
+            for (Resource resource : tokenResources) {
+                ResourceCodec<NodeREDAPITokenResource> codec = GatewayHook.TOKEN_RESOURCE_TYPE_META.getCodec();
+                DecodedResource<NodeREDAPITokenResource> decodedResource = codec.decode(resource);
+                NodeREDAPITokenResource token = decodedResource.config();
+                if (token.APIToken().equals(apiToken)) {
+                    if (decodedResource.enabled()) {
+                        if (!token.getSecret(context).equals(secret)) {
+                            success = false;
+                            errorMessage = "Invalid API token and secret";
+                        } else {
+                            return new APITokenValidation(success, errorMessage, decodedResource.name(), token.APIToken(), token.AuditProfile(), token.SecurityLevels(), token.Roles(), token.Zones());
+                        }
+                    } else {
+                        success = false;
+                        errorMessage = "API token and secret is disabled";
+                    }
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                success = false;
+                errorMessage = "Invalid API token";
+            }
+        } catch (Throwable t) {
             success = false;
-            errorMessage = "Invalid API token and secret";
-        } else {
-            if (!r.isEnabled()) {
-                success = false;
-                errorMessage = "API token and secret is disabled";
-            } else if (!r.getSecret().equals(secret)) {
-                success = false;
-                errorMessage = "Invalid API token and secret";
-            }
+            errorMessage = "Invalid API token";
+            logger.error("Error getting API token", t);
         }
 
-        String auditProfileName = null;
-        if (r.getAuditProfileId() != null) {
-            SQuery<AuditProfileRecord> auditQuery = new SQuery<>(AuditProfileRecord.META);
-            auditQuery.eq(AuditProfileRecord.Id, r.getAuditProfileId());
-            AuditProfileRecord auditRecord = context.getPersistenceInterface().queryOne(auditQuery);
-            if (auditRecord != null) {
-                auditProfileName = auditRecord.getName();
-            }
-        }
-
-        return new APITokenValidation(success, errorMessage, r.getName(), r.getAPIToken(), auditProfileName, r.getSecurityLevels(), r.getRoles(), r.getZones());
+        return new APITokenValidation(success, errorMessage, null, null, null, null, null, null);
     }
 }
