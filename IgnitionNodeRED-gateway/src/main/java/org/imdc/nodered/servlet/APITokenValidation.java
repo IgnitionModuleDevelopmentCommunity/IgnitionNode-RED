@@ -83,13 +83,13 @@ public class APITokenValidation {
                 ResourceCodec<NodeREDAPITokenResource> codec = GatewayHook.TOKEN_RESOURCE_TYPE_META.getCodec();
                 DecodedResource<NodeREDAPITokenResource> decodedResource = codec.decode(resource);
                 NodeREDAPITokenResource token = decodedResource.config();
-                if (token.APIToken().equals(apiToken)) {
+                if (token.aPIToken().equals(apiToken)) {
                     if (decodedResource.enabled()) {
                         if (!token.getSecret(context).equals(secret)) {
                             success = false;
                             errorMessage = "Invalid API token and secret";
                         } else {
-                            return new APITokenValidation(success, errorMessage, decodedResource.name(), token.APIToken(), token.AuditProfile(), token.SecurityLevels(), token.Roles(), token.Zones());
+                            return new APITokenValidation(success, errorMessage, decodedResource.name(), token.aPIToken(), token.auditProfile(), token.securityLevels(), token.roles(), token.zones());
                         }
                     } else {
                         success = false;

@@ -5,7 +5,10 @@ import {
   Checkbox,
   TextArea,
   TextInput,
+  SelectInput,
+  SelectInputOption,
 } from "@inductiveautomation/ignition-web-ui";
+import useFetch from "../../utils/useFetch";
 import { getNodeREDPageStyles } from "../_NodeRED.styles";
 
 const TokenForm = ({ isEdit }: { isEdit: boolean }) => {
@@ -14,6 +17,23 @@ const TokenForm = ({ isEdit }: { isEdit: boolean }) => {
   const {
     classes: { scDrawerCard },
   } = getNodeREDPageStyles();
+
+  const { data: auditProfiles } = useFetch(
+    `/data/api/v1/resources/names/ignition/audit-profile`,
+    {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const auditProfileOptions: SelectInputOption[] =
+    auditProfiles?.items
+      ?.map((item: { name: string }) => {
+        return { value: item.name, label: item.name };
+      })
+      .filter((item: any) => item) ?? [];
 
   return (
     <div>
@@ -44,7 +64,7 @@ const TokenForm = ({ isEdit }: { isEdit: boolean }) => {
       <Card title={"TOKEN CONFIGURATION"} required={true}>
         <FormControlInput
           input={<TextArea />}
-          name={"config.APIToken"}
+          name={"config.aPIToken"}
           id={"token"}
           label={"Token *"}
         />
@@ -67,7 +87,7 @@ const TokenForm = ({ isEdit }: { isEdit: boolean }) => {
               disabled={!secretEnabled}
               indent={true}
               input={<TextInput type={"password"} />}
-              name={"config.Secret"}
+              name={"config.secret"}
               id={"secret"}
               label={"Secret"}
             />
@@ -86,7 +106,7 @@ const TokenForm = ({ isEdit }: { isEdit: boolean }) => {
           <>
             <FormControlInput
               input={<TextInput type={"password"} />}
-              name={"config.Secret"}
+              name={"config.secret"}
               id={"secret"}
               label={"Secret *"}
             />
@@ -99,6 +119,30 @@ const TokenForm = ({ isEdit }: { isEdit: boolean }) => {
             />
           </>
         )}
+        <FormControlInput
+          input={<SelectInput values={auditProfileOptions} />}
+          name={"config.auditProfile"}
+          id={"auditProfile"}
+          label={"Audit Profile"}
+        />
+        <FormControlInput
+          input={<TextInput />}
+          name={"config.securityLevels"}
+          id={"securityLevels"}
+          label={"Security Levels"}
+        />
+        <FormControlInput
+          input={<TextInput />}
+          name={"config.roles"}
+          id={"roles"}
+          label={"Roles"}
+        />
+        <FormControlInput
+          input={<TextInput />}
+          name={"config.zones"}
+          id={"zones"}
+          label={"Zones"}
+        />
       </Card>
     </div>
   );

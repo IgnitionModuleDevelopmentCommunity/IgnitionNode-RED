@@ -4,11 +4,13 @@ import com.inductiveautomation.ignition.common.BundleUtil;
 import com.inductiveautomation.ignition.common.licensing.LicenseState;
 import com.inductiveautomation.ignition.common.resourcecollection.ResourceType;
 import com.inductiveautomation.ignition.gateway.config.ResourceTypeMeta;
+import com.inductiveautomation.ignition.gateway.config.migration.DefaultRecordEncodingDelegate;
 import com.inductiveautomation.ignition.gateway.config.migration.IdbMigrationStrategy;
 import com.inductiveautomation.ignition.gateway.config.migration.NamedRecordMigrationStrategy;
 import com.inductiveautomation.ignition.gateway.model.AbstractGatewayModuleHook;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
 import com.inductiveautomation.ignition.gateway.web.systemjs.SystemJsModule;
+import org.apache.commons.lang3.StringUtils;
 import org.imdc.nodered.servlet.NodeREDServlet;
 import org.imdc.nodered.servlet.NodeREDWebSocketServlet;
 import org.slf4j.Logger;
@@ -75,7 +77,7 @@ public class GatewayHook extends AbstractGatewayModuleHook {
 
     @Override
     public List<IdbMigrationStrategy> getRecordMigrationStrategies() {
-        return List.of(new NamedRecordMigrationStrategy(NodeREDAPITokens.META, TOKEN_RESOURCE_TYPE));
+        return List.of(new NamedRecordMigrationStrategy(NodeREDAPITokens.META, NodeREDAPITokens.Name, null, NodeREDAPITokens.Enabled, TOKEN_RESOURCE_TYPE, new DefaultRecordEncodingDelegate()));
     }
 
     @Override

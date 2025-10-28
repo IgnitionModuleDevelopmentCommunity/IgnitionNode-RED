@@ -109,7 +109,7 @@ const TokensPage = () => {
     resolver: yupResolver(TokenSchema),
   });
 
-  const secret = context.watch("config.Secret");
+  const secret = context.watch("config.secret");
   const confirmSecret = context.watch("config.confirmSecret");
   const changeSecret = context.watch("config.changeSecret");
 
@@ -147,12 +147,12 @@ const TokensPage = () => {
           signature: data.signature,
           description: data.description,
           config: {
-            APIToken: data.config.APIToken,
-            storedSecret: data.config.Secret,
-            AuditProfile: data.config.AuditProfile,
-            SecurityLevels: data.config.SecurityLevels,
-            Roles: data.config.Roles,
-            Zones: data.config.Zones,
+            aPIToken: data.config.aPIToken,
+            storedSecret: data.config.secret,
+            auditProfile: data.config.auditProfile,
+            securityLevels: data.config.securityLevels,
+            roles: data.config.roles,
+            zones: data.config.zones,
           },
         } as TokenResource);
         setEditDrawer(true);
@@ -232,7 +232,7 @@ const TokensPage = () => {
             "Content-Type": "application/json",
             "X-CSRF-Token": csrfToken,
           },
-          body: formValues.config.Secret,
+          body: formValues.config.secret,
         }
       );
 
@@ -266,12 +266,12 @@ const TokensPage = () => {
                 enabled: formValues.enabled,
                 description: formValues.description,
                 config: {
-                  APIToken: formValues.config.APIToken,
-                  Secret: { ...encryptedSecret },
-                  AuditProfile: formValues.config.AuditProfile,
-                  SecurityLevels: formValues.config.SecurityLevels,
-                  Roles: formValues.config.Roles,
-                  Zones: formValues.config.Zones,
+                  aPIToken: formValues.config.aPIToken,
+                  secret: { ...encryptedSecret },
+                  auditProfile: formValues.config.auditProfile,
+                  securityLevels: formValues.config.securityLevels,
+                  roles: formValues.config.roles,
+                  zones: formValues.config.zones,
                 },
               },
             ]),
@@ -303,7 +303,7 @@ const TokensPage = () => {
         let encryptedSecret: { type: string; data: {} } | null;
         encryptedSecret = null;
 
-        if (formValues.config.Secret && formValues.config.Secret != "") {
+        if (formValues.config.secret && formValues.config.secret != "") {
           const encryptSecretResponse = await fetch(
             "/data/api/v1/encryption/encrypt",
             {
@@ -312,7 +312,7 @@ const TokensPage = () => {
                 "Content-Type": "application/json",
                 "X-CSRF-Token": csrfToken,
               },
-              body: formValues.config.Secret,
+              body: formValues.config.secret,
             }
           );
 
@@ -349,14 +349,14 @@ const TokensPage = () => {
                 enabled: formValues.enabled,
                 description: formValues.description,
                 config: {
-                  APIToken: formValues.config.APIToken,
-                  Secret: encryptedSecret
+                  aPIToken: formValues.config.aPIToken,
+                  secret: encryptedSecret
                     ? { ...encryptedSecret }
                     : tokenResource.config.storedSecret,
-                  AuditProfile: formValues.config.AuditProfile,
-                  SecurityLevels: formValues.config.SecurityLevels,
-                  Roles: formValues.config.Roles,
-                  Zones: formValues.config.Zones,
+                  auditProfile: formValues.config.auditProfile,
+                  securityLevels: formValues.config.securityLevels,
+                  roles: formValues.config.roles,
+                  zones: formValues.config.zones,
                 },
               },
             ]),

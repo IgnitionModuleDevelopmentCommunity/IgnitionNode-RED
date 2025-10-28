@@ -2,13 +2,13 @@ import { yup } from "@inductiveautomation/ignition-web-ui";
 import { FieldValues } from "react-hook-form";
 
 export interface TokenConfig {
-  APIToken: string;
-  Secret: string;
+  aPIToken: string;
+  secret: string;
   storedSecret: any;
-  AuditProfile: string;
-  SecurityLevels: string;
-  Roles: string;
-  Zones: string;
+  auditProfile: string;
+  securityLevels: string;
+  roles: string;
+  zones: string;
 }
 
 export interface TokenResource {
@@ -26,18 +26,18 @@ export namespace TokenUtils {
     description: yup.string(),
     signature: yup.string().nullable(),
     config: yup.object().shape({
-      APIToken: yup
+      aPIToken: yup
         .string()
         .required("Token is required")
         .length(16, "Must be exactly 16 characters")
         .matches(/^[a-zA-Z0-9]+$/, "Must contain only alphanumeric characters"),
-      Secret: yup.string().required("Secret is required"),
+      secret: yup.string().required("Secret is required"),
       changeSecret: yup.boolean(),
       confirmSecret: yup.string(),
-      AuditProfile: yup.string().nullable(),
-      SecurityLevels: yup.string(),
-      Roles: yup.string(),
-      Zones: yup.string(),
+      auditProfile: yup.string().nullable(),
+      securityLevels: yup.string(),
+      roles: yup.string(),
+      zones: yup.string(),
     }),
   });
 
@@ -47,14 +47,14 @@ export namespace TokenUtils {
     signature: null,
     description: "",
     config: {
-      APIToken: "",
-      Secret: "",
+      aPIToken: "",
+      secret: "",
       changeSecret: false,
       confirmSecret: "",
-      AuditProfile: null,
-      SecurityLevels: "",
-      Roles: "",
-      Zones: "",
+      auditProfile: null,
+      securityLevels: "",
+      roles: "",
+      zones: "",
     },
   };
 }

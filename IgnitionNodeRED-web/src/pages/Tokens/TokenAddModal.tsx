@@ -23,7 +23,7 @@ const TokenAddModal = ({
   isDisabled,
 }: TokenAddModalProps) => {
   const {
-    classes: { scModalTitle, scModal, scFormRoot, scModalFooter, scForm },
+    classes: { scModalTitle, scModal, scFormRoot, scModalFooter, scForm500 },
   } = getNodeREDPageStyles();
 
   const {
@@ -45,7 +45,7 @@ const TokenAddModal = ({
         </button>
       </div>
       <div className={scModal}>
-        <div className={scForm}>
+        <div className={scForm500}>
           <Form
             onSubmit={create}
             context={context}
