@@ -17,7 +17,7 @@ plugins {
 val sdk_version by extra("8.3.0-beta2")
 
 allprojects {
-    version = "2.0.0"
+    version = "2.0.1"
 }
 
 ignitionModule {

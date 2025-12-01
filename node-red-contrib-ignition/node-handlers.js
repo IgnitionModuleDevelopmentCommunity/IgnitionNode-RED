@@ -276,10 +276,6 @@ var IgnitionWSNodesImpl = (function () {
         this.serverConfig = serverConfig;
         this.node = node;
         this.command = command;
-		
-		if(!this.serverConfig.defaultTagProvider || this.serverConfig.defaultTagProvider == ""){
-            this.serverConfig.defaultTagProvider = "edge";
-        }
     }
 	
 	IgnitionWSNodesImpl.prototype.init = function () {
